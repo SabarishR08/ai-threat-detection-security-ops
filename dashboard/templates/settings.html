@@ -1,0 +1,648 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Cyber Defense System{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto fade-in">
+    <!-- Page Header -->
+    <div class="text-center mb-8">
+        <h1 class="header-title text-3xl mb-4">
+            <i class="fas fa-cogs text-primary"></i> System Settings
+        </h1>
+        <p class="text-muted font-mono">Configure your security preferences and API integrations</p>
+    </div>
+
+    <!-- Settings Form -->
+    <div class="neon-box p-8">
+        <form id="settingsForm" class="space-y-6">
+            <!-- Alert Settings Section -->
+            <div class="space-y-4">
+                <h2 class="text-primary font-bold text-xl mb-4 flex items-center gap-2">
+                    <i class="fas fa-bell"></i> Alert Preferences
+                </h2>
+                
+                <!-- Email Alerts -->
+                <div class="setting-group">
+                    <label for="emailAlerts" class="setting-label">
+                        <i class="fas fa-envelope text-primary"></i> Email Alerts
+                    </label>
+                    <div class="setting-description">
+                        Receive email notifications for critical security events
+                    </div>
+                    <select id="emailAlerts" class="setting-input">
+                        <option value="enabled">All Alerts</option>
+                        <option value="critical">Critical Only</option>
+                        <option value="disabled">Disabled</option>
+                    </select>
+                    <div class="mt-2 text-xs text-muted">
+                        <span id="emailAlertDesc" class="flex items-center gap-1">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Receive notifications for all security events</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Notification Frequency -->
+                <div class="setting-group">
+                    <label for="notificationFrequency" class="setting-label">
+                        <i class="fas fa-clock text-primary"></i> Notification Frequency
+                    </label>
+                    <div class="setting-description">
+                        How often to receive batch notifications
+                    </div>
+                    <select id="notificationFrequency" class="setting-input">
+                        <option value="immediate">Real-time</option>
+                        <option value="hourly">Hourly</option>
+                        <option value="daily">Daily</option>
+                    </select>
+                    <div class="mt-2 text-xs text-muted">
+                        <span id="frequencyDesc" class="flex items-center gap-1">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Alerts are sent immediately as they occur</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-glass-border my-6"></div>
+
+            <!-- API Integration Section -->
+            <div class="space-y-4">
+                <h2 class="text-primary font-bold text-xl mb-4 flex items-center gap-2">
+                    <i class="fas fa-key"></i> API Integrations
+                </h2>
+                
+                <!-- VirusTotal API -->
+                <div class="setting-group">
+                    <label for="virusTotalApiKey" class="setting-label">
+                        <i class="fas fa-shield-alt text-primary"></i> VirusTotal API Key
+                    </label>
+                    <div class="setting-description">
+                        Required for threat intelligence lookups and file analysis
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="virusTotalApiKey" 
+                               class="setting-input pr-10" 
+                               value="{{ virustotal_api_key or '' }}" 
+                               placeholder="Enter your VirusTotal API key">
+                        <button type="button" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted hover:text-primary"
+                                onclick="togglePassword('virusTotalApiKey')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                        <i class="fas fa-info-circle text-primary"></i>
+                        <span class="text-sm text-muted">Your API key is encrypted and stored securely</span>
+                    </div>
+                </div>
+
+                <!-- API Status -->
+                <div class="setting-group">
+                    <div class="setting-label">
+                        <i class="fas fa-plug text-primary"></i> API Connection Status
+                    </div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div id="apiStatusIndicator" class="w-3 h-3 rounded-full bg-status-warning"></div>
+                        <span class="text-muted" id="apiStatusText">Click test to verify connection</span>
+                    </div>
+                    <button type="button" id="testApiBtn" class="test-button">
+                        <i class="fas fa-sync-alt"></i> Test Connection
+                    </button>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-glass-border my-6"></div>
+
+            <!-- System Preferences -->
+            <div class="space-y-4">
+                <h2 class="text-primary font-bold text-xl mb-4 flex items-center gap-2">
+                    <i class="fas fa-sliders-h"></i> System Preferences
+                </h2>
+                
+                <!-- Auto Scan -->
+                <div class="setting-group">
+                    <label class="setting-label flex items-center justify-between cursor-pointer">
+                        <span><i class="fas fa-robot text-primary"></i> Automatic Threat Scanning</span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="autoScan" class="toggle-input" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </label>
+                    <div class="setting-description">
+                        Automatically scan incoming emails and files for threats
+                    </div>
+                </div>
+
+                <!-- Log Retention -->
+                <div class="setting-group">
+                    <label for="logRetention" class="setting-label">
+                        <i class="fas fa-database text-primary"></i> Log Retention Period
+                    </label>
+                    <div class="setting-description">
+                        How long to keep threat logs and scan results
+                    </div>
+                    <select id="logRetention" class="setting-input">
+                        <option value="7">7 Days</option>
+                        <option value="30" selected>30 Days</option>
+                        <option value="90">90 Days</option>
+                        <option value="365">1 Year</option>
+                    </select>
+                    <div class="mt-2 text-xs text-muted">
+                        <span id="retentionDesc" class="flex items-center gap-1">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Recommended balance of storage and history</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col md:flex-row gap-4 pt-6 mt-8 border-t border-glass-border">
+                <button type="submit" class="neon-button flex-1">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <i class="fas fa-save"></i> Save Settings
+                </button>
+                
+                <button type="button" id="resetBtn" class="neon-button flex-1" style="--accent-primary: var(--status-warning);">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <i class="fas fa-undo"></i> Reset Defaults
+                </button>
+            </div>
+        </form>
+
+        <!-- Status Messages -->
+        <div id="settingsMessage" class="mt-6"></div>
+    </div>
+</div>
+
+<style>
+/* Additional Settings Styles */
+.setting-group {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.setting-group:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--accent-primary);
+}
+
+.setting-label {
+    display: block;
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    font-family: var(--font-mono);
+}
+
+.setting-description {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.setting-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2303e9f4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.setting-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(3, 233, 244, 0.1);
+}
+
+.setting-input option {
+    background: #0f0c29;
+    color: var(--text-main);
+    padding: 12px;
+    font-family: var(--font-main);
+}
+
+.setting-input option:hover,
+.setting-input option:focus,
+.setting-input option:checked {
+    background: var(--accent-primary);
+    color: #050801;
+}
+
+/* Custom dropdown styling for better visibility */
+.setting-input:after {
+    content: '▼';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent-primary);
+    pointer-events: none;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background-color: var(--text-muted);
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.toggle-input:checked + .toggle-slider {
+    background-color: var(--accent-primary);
+}
+
+.toggle-input:checked + .toggle-slider:before {
+    transform: translateX(30px);
+    background-color: white;
+}
+
+/* Test Button */
+.test-button {
+    padding: 10px 20px;
+    background: rgba(3, 233, 244, 0.1);
+    border: 1px solid var(--accent-primary);
+    border-radius: 8px;
+    color: var(--accent-primary);
+    font-family: var(--font-main);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 5px;
+    width: 100%;
+}
+
+.test-button:hover {
+    background: rgba(3, 233, 244, 0.2);
+    box-shadow: 0 0 10px rgba(3, 233, 244, 0.3);
+}
+
+.test-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Status Messages */
+#settingsMessage {
+    padding: 16px;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    text-align: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+#settingsMessage.success {
+    background: rgba(57, 255, 20, 0.1);
+    border: 1px solid var(--status-success);
+    color: var(--status-success);
+}
+
+#settingsMessage.error {
+    background: rgba(255, 49, 49, 0.1);
+    border: 1px solid var(--status-danger);
+    color: var(--status-danger);
+}
+
+#settingsMessage.warning {
+    background: rgba(255, 184, 0, 0.1);
+    border: 1px solid var(--status-warning);
+    color: var(--status-warning);
+}
+
+/* Dropdown descriptions */
+.dropdown-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    padding-left: 4px;
+    border-left: 2px solid var(--accent-primary);
+    transition: all 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .setting-group {
+        padding: 16px;
+    }
+    
+    .setting-label {
+        font-size: 1rem;
+    }
+    
+    .setting-description {
+        font-size: 0.85rem;
+    }
+    
+    .neon-box {
+        padding: 20px;
+    }
+}
+</style>
+
+<!-- Socket.IO Client (optional, if backend serves it) -->
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+// Toggle password visibility
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = input.nextElementSibling.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+// Update description based on dropdown selection
+function updateDescriptions() {
+    const emailAlerts = document.getElementById('emailAlerts');
+    const frequency = document.getElementById('notificationFrequency');
+    const retention = document.getElementById('logRetention');
+    
+    const emailDesc = document.getElementById('emailAlertDesc');
+    const freqDesc = document.getElementById('frequencyDesc');
+    const retentionDesc = document.getElementById('retentionDesc');
+    
+    // Email alert descriptions
+    const emailDescriptions = {
+        'enabled': 'Receive notifications for all security events',
+        'critical': 'Only receive notifications for critical threats',
+        'disabled': 'No email notifications will be sent'
+    };
+    
+    // Frequency descriptions
+    const frequencyDescriptions = {
+        'immediate': 'Alerts are sent immediately as they occur',
+        'hourly': 'Alerts are batched and sent every hour',
+        'daily': 'Daily summary report sent at midnight'
+    };
+    
+    // Retention descriptions
+    const retentionDescriptions = {
+        '7': 'Minimal storage usage, faster performance',
+        '30': 'Recommended balance of storage and history',
+        '90': 'Extended history for trend analysis',
+        '365': 'Maximum retention for compliance needs'
+    };
+    
+    // Update descriptions
+    emailDesc.innerHTML = `<i class="fas fa-info-circle"></i><span>${emailDescriptions[emailAlerts.value]}</span>`;
+    freqDesc.innerHTML = `<i class="fas fa-info-circle"></i><span>${frequencyDescriptions[frequency.value]}</span>`;
+    retentionDesc.innerHTML = `<i class="fas fa-info-circle"></i><span>${retentionDescriptions[retention.value]}</span>`;
+}
+
+// Test API connection
+document.getElementById('testApiBtn').addEventListener('click', async function() {
+    const apiKey = document.getElementById('virusTotalApiKey').value;
+    const statusIndicator = document.getElementById('apiStatusIndicator');
+    const statusText = document.getElementById('apiStatusText');
+    const testBtn = this;
+    
+    if (!apiKey) {
+        showMessage('Please enter a VirusTotal API key first', 'warning');
+        return;
+    }
+    
+    // Update UI
+    testBtn.disabled = true;
+    testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+    statusIndicator.className = 'w-3 h-3 rounded-full bg-status-warning';
+    statusText.textContent = 'Testing connection...';
+    statusText.className = 'text-warning';
+    
+    try {
+        const response = await fetch('/api/test_virustotal', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ api_key: apiKey })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            statusIndicator.className = 'w-3 h-3 rounded-full bg-status-success';
+            statusText.textContent = 'Connected successfully';
+            statusText.className = 'text-success';
+            showMessage('✓ VirusTotal API connection successful!', 'success');
+            showSnackbar('VirusTotal validated. Remember to save.', 'success');
+        } else {
+            statusIndicator.className = 'w-3 h-3 rounded-full bg-status-danger';
+            statusText.textContent = 'Connection failed';
+            statusText.className = 'text-danger';
+            showMessage('✗ API connection failed: ' + (data.error || 'Invalid API key'), 'error');
+            showSnackbar('API test failed', 'error');
+        }
+    } catch (error) {
+        statusIndicator.className = 'w-3 h-3 rounded-full bg-status-danger';
+        statusText.textContent = 'Connection error';
+        statusText.className = 'text-danger';
+        showMessage('✗ Network error while testing connection', 'error');
+        showSnackbar('Network error during API test', 'error');
+    } finally {
+        testBtn.disabled = false;
+        testBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Test Connection';
+    }
+});
+
+// Form submission
+document.getElementById('settingsForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const saveBtn = this.querySelector('button[type="submit"]');
+    
+    const formData = {
+        email_alerts: document.getElementById('emailAlerts').value,
+        notification_frequency: document.getElementById('notificationFrequency').value,
+        virustotal_api_key: document.getElementById('virusTotalApiKey').value,
+        auto_scan: document.getElementById('autoScan').checked,
+        log_retention: document.getElementById('logRetention').value
+    };
+    
+    showMessage('<i class="fas fa-spinner fa-spin"></i> Saving settings...', 'warning');
+    
+    try {
+        if (saveBtn) { saveBtn.disabled = true; }
+        const response = await fetch('/api/update_settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('<i class="fas fa-check-circle"></i> ' + data.message, 'success');
+            showSnackbar('Settings saved successfully', 'success');
+            
+            // Update status indicator if API key was changed
+            const statusIndicator = document.getElementById('apiStatusIndicator');
+            const statusText = document.getElementById('apiStatusText');
+            statusIndicator.className = 'w-3 h-3 rounded-full bg-status-warning';
+            statusText.textContent = 'Click test to verify connection';
+            statusText.className = 'text-muted';
+        } else {
+            showMessage('<i class="fas fa-exclamation-triangle"></i> ' + (data.error || 'Error saving settings'), 'error');
+            showSnackbar('Error saving settings', 'error');
+        }
+    } catch (error) {
+        showMessage('<i class="fas fa-exclamation-triangle"></i> Network error while saving settings', 'error');
+        console.error('Error:', error);
+        showSnackbar('Network error while saving', 'error');
+    } finally {
+        if (saveBtn) { saveBtn.disabled = false; }
+    }
+});
+
+// Reset to defaults
+document.getElementById('resetBtn').addEventListener('click', function() {
+    if (confirm('Are you sure you want to reset all settings to defaults? This cannot be undone.')) {
+        document.getElementById('emailAlerts').value = 'enabled';
+        document.getElementById('notificationFrequency').value = 'immediate';
+        document.getElementById('virusTotalApiKey').value = '';
+        document.getElementById('autoScan').checked = true;
+        document.getElementById('logRetention').value = '30';
+        
+        // Update descriptions
+        updateDescriptions();
+        
+        showMessage('Settings have been reset to defaults. Click "Save Settings" to apply.', 'warning');
+    }
+});
+
+// Helper function to show messages
+function showMessage(message, type = 'info') {
+    const messageDiv = document.getElementById('settingsMessage');
+    messageDiv.innerHTML = message;
+    messageDiv.className = type;
+    
+    // Auto-hide success messages after 5 seconds
+    if (type === 'success') {
+        setTimeout(() => {
+            messageDiv.innerHTML = '';
+            messageDiv.className = '';
+        }, 5000);
+    }
+}
+
+// Snackbar helper
+let snackbarTimer = null;
+function showSnackbar(message, type = 'info', durationMs = 3500) {
+    let bar = document.getElementById('snackbar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'snackbar';
+        document.body.appendChild(bar);
+    }
+    bar.className = type;
+    bar.style.position = 'fixed';
+    bar.style.left = '50%';
+    bar.style.bottom = '24px';
+    bar.style.transform = 'translateX(-50%)';
+    bar.style.minWidth = '280px';
+    bar.style.maxWidth = '80vw';
+    bar.style.padding = '12px 16px';
+    bar.style.background = 'rgba(15, 12, 41, 0.9)';
+    bar.style.border = '1px solid var(--glass-border)';
+    bar.style.borderRadius = '10px';
+    bar.style.boxShadow = '0 10px 25px rgba(0,0,0,0.35)';
+    bar.style.fontFamily = 'var(--font-mono)';
+    bar.style.fontSize = '0.9rem';
+    bar.style.zIndex = '1000';
+    bar.style.color = type === 'success' ? 'var(--status-success)' : type === 'error' ? 'var(--status-danger)' : type === 'warning' ? 'var(--status-warning)' : 'var(--text-main)';
+    bar.textContent = message;
+    bar.style.display = 'block';
+    if (snackbarTimer) { clearTimeout(snackbarTimer); }
+    snackbarTimer = setTimeout(() => { bar.style.display = 'none'; }, durationMs);
+}
+
+// Initialize form with current settings and descriptions
+window.addEventListener('DOMContentLoaded', () => {
+    // Add event listeners to update descriptions
+    document.getElementById('emailAlerts').addEventListener('change', updateDescriptions);
+    document.getElementById('notificationFrequency').addEventListener('change', updateDescriptions);
+    document.getElementById('logRetention').addEventListener('change', updateDescriptions);
+    
+    // Initial description update
+    updateDescriptions();
+
+    // Fetch current settings from backend
+    fetch('/api/get_settings')
+        .then(r => r.json())
+        .then(data => {
+            if (!data) return;
+            document.getElementById('emailAlerts').value = data.email_alerts || 'enabled';
+            document.getElementById('notificationFrequency').value = data.notification_frequency || 'immediate';
+            document.getElementById('virusTotalApiKey').value = data.virustotal_api_key || '';
+            document.getElementById('autoScan').checked = data.auto_scan !== false;
+            document.getElementById('logRetention').value = data.log_retention || '30';
+            updateDescriptions();
+        })
+        .catch(() => { showSnackbar('Settings unavailable. Read-only mode.', 'warning'); });
+});
+</script>
+{% endblock %}

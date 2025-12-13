@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Defense System</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+
+    <!-- Font & Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+/* ============================================
+   ROOT VARIABLES & BASE STYLES
+   ============================================ */
+
+:root {
+    /* Glassmorphism Variables */
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-highlight: rgba(255, 255, 255, 0.15);
+    
+    /* Text Colors */
+    --text-main: #ffffff;
+    --text-muted: #a0a0c0;
+    
+    /* Accent Colors */
+    --accent-primary: #03e9f4;
+    --accent-secondary: #7000ff;
+    
+    /* Status Colors */
+    --status-success: #39FF14;
+    --status-warning: #ffb800;
+    --status-danger: #ff3131;
+    
+    /* Fonts */
+    --font-main: 'Outfit', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ============================================
+   BODY & BACKGROUND GRADIENT (FROM SAMPLE)
+   ============================================ */
+
+body { 
+    background-color: #0f0c29;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+    background-attachment: fixed;
+    color: var(--text-main); 
+    font-family: var(--font-main);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+/* Ambient Background overlay */
+body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, transparent, #000 70%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* ============================================
+   HEADER & NAVIGATION
+   ============================================ */
+
+header {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.navbar {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar h1.neon-text {
+    font-size: 1.8rem;
+    color: var(--accent-primary);
+    text-shadow: 0 0 10px var(--accent-primary);
+    font-family: var(--font-mono);
+    letter-spacing: 2px;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+nav ul li {
+    margin: 0;
+}
+
+/* ============================================
+   NEON BUTTONS (YOUR EXISTING STYLE)
+   ============================================ */
+
+.neon-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 20px;
+    color: #a78bfa;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: 0.5s;
+    letter-spacing: 2px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(30, 41, 59, 0.7));
+    border: 2px solid rgba(167, 139, 250, 0.35);
+    cursor: pointer;
+    font-family: var(--font-main);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    min-width: 120px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 0 10px rgba(167, 139, 250, 0.08);
+    backdrop-filter: blur(8px);
+}
+
+.neon-button:hover {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));
+    border-color: rgba(167, 139, 250, 0.6);
+    box-shadow: 
+        0 8px 25px rgba(167, 139, 250, 0.25),
+        inset 0 0 20px rgba(167, 139, 250, 0.15),
+        0 0 20px rgba(167, 139, 250, 0.3);
+    color: #a78bfa;
+}
+
+.neon-button:active {
+    transform: translateY(-1px);
+    box-shadow: 
+        0 4px 15px rgba(167, 139, 250, 0.15),
+        inset 0 0 15px rgba(167, 139, 250, 0.1);
+}
+
+.neon-button i {
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
+.neon-button span {
+    position: absolute;
+    display: block;
+}
+
+/* Top border animation */
+.neon-button span:nth-child(1) {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary));
+    animation: animate1 1s linear infinite;
+}
+
+@keyframes animate1 {
+    0% {
+        left: -100%;
+    }
+    50%, 100% {
+        left: 100%;
+    }
+}
+
+/* Right border animation */
+.neon-button span:nth-child(2) {
+    top: -100%;
+    right: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(180deg, transparent, var(--accent-primary));
+    animation: animate2 1s linear infinite;
+    animation-delay: 0.25s;
+}
+
+@keyframes animate2 {
+    0% {
+        top: -100%;
+    }
+    50%, 100% {
+        top: 100%;
+    }
+}
+
+/* Bottom border animation */
+.neon-button span:nth-child(3) {
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(270deg, transparent, var(--accent-primary));
+    animation: animate3 1s linear infinite;
+    animation-delay: 0.50s;
+}
+
+@keyframes animate3 {
+    0% {
+        right: -100%;
+    }
+    50%, 100% {
+        right: 100%;
+    }
+}
+
+/* Left border animation */
+.neon-button span:nth-child(4) {
+    bottom: -100%;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(360deg, transparent, var(--accent-primary));
+    animation: animate4 1s linear infinite;
+    animation-delay: 0.75s;
+}
+
+@keyframes animate4 {
+    0% {
+        bottom: -100%;
+    }
+    50%, 100% {
+        bottom: 100%;
+    }
+}
+
+/* ============================================
+   MAIN CONTENT AREA
+   ============================================ */
+
+main {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.neon-box {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Text Utilities */
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }
+.text-primary { color: var(--accent-primary); }
+.text-success { color: var(--status-success); }
+.text-danger { color: var(--status-danger); }
+.text-warning { color: var(--status-warning); }
+
+.font-bold { font-weight: 700; }
+.font-mono { font-family: var(--font-mono); }
+
+/* Spacing */
+.p-4 { padding: 1rem; }
+.p-8 { padding: 2rem; }
+.mb-8 { margin-bottom: 2rem; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+/* Layout */
+.max-w-7xl { max-width: 80rem; }
+
+/* Typography */
+.text-3xl { font-size: 2rem; line-height: 2.25rem; letter-spacing: -0.02em; }
+
+.header-title {
+    background: linear-gradient(to right, #fff, var(--accent-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    margin-bottom: 3rem;
+    font-size: 2.5rem;
+    text-align: center;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (min-width: 768px) {
+    .p-8 {
+        padding: 3rem;
+    }
+
+    .text-3xl {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    nav ul {
+        justify-content: center;
+        gap: 5px;
+    }
+    
+    .neon-button {
+        padding: 12px 15px;
+        font-size: 0.8rem;
+        min-width: 100px;
+    }
+    
+    .neon-button i {
+        font-size: 1rem;
+        margin-right: 5px;
+    }
+    
+    .neon-box {
+        padding: 20px;
+    }
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+    </style>
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <nav>
+                <ul>
+                    <li>
+                        <a href="{{ url_for('dashboard') }}" class="neon-button">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <i class="fas fa-home"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('logs') }}" class="neon-button">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <i class="fas fa-list"></i> Threat Logs
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('threat_lookup') }}" class="neon-button">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <i class="fas fa-search"></i> Threat Lookup
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('email_scanner.email_scanner_page') }}" class="neon-button">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <i class="fas fa-envelope"></i> Email Scanner
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('soc_analyzer') }}" class="neon-button">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <i class="fas fa-shield-virus"></i> SOC Analyzer
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('qr_detector') }}" class="neon-button">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <i class="fas fa-qrcode"></i> QR Detector
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('settings') }}" class="neon-button">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <i class="fas fa-cog"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="neon-box">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</body>
+</html>

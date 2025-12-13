@@ -1,0 +1,1062 @@
+{% extends "base.html" %}
+{% block title %}Activity & Security Logs{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --glass-highlight: rgba(255, 255, 255, 0.15);
+        
+        --text-main: #ffffff;
+        --text-muted: #a0a0c0;
+        
+        --accent-primary: #03e9f4;
+        --accent-secondary: #7000ff;
+        
+        --status-success: #39FF14;
+        --status-warning: #ffb800;
+        --status-danger: #ff3131;
+        
+        --font-main: 'Outfit', sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
+    }
+    
+    * {
+        box-sizing: border-box;
+    }
+
+    body { 
+        background-color: #030712;
+        color: var(--text-main); 
+        font-family: var(--font-main);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        line-height: 1.6;
+    }
+
+    .clear-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--glass-border);
+        background: rgba(255,255,255,0.05);
+        color: var(--text-main);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    .clear-btn:hover {
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 12px rgba(3, 233, 244, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .lock-icon { font-size: 1.1rem; }
+    
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-card {
+        background: linear-gradient(135deg, rgba(11, 18, 36, 0.98) 0%, rgba(20, 25, 50, 0.98) 100%);
+        border: 1px solid var(--accent-primary);
+        border-radius: 16px;
+        padding: 28px;
+        width: 380px;
+        box-shadow: 0 20px 60px rgba(3, 233, 244, 0.15), 0 0 40px rgba(0,0,0,0.6);
+        color: var(--text-main);
+        animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideUp {
+        from { 
+            opacity: 0; 
+            transform: translateY(20px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 700;
+        font-size: 1.15rem;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(3, 233, 244, 0.2);
+        letter-spacing: 0.02em;
+    }
+
+    .close-modal {
+        background: transparent;
+        color: var(--text-main);
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+    }
+
+    .close-modal:hover {
+        color: var(--accent-primary);
+        background: rgba(3, 233, 244, 0.1);
+        transform: rotate(90deg);
+    }
+
+    .modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .input-label {
+        font-size: 0.8rem;
+        color: var(--accent-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .modal-input {
+        background: rgba(255,255,255,0.06);
+        border: 1.5px solid rgba(3, 233, 244, 0.3);
+        border-radius: 10px;
+        padding: 12px 14px;
+        color: var(--text-main);
+        outline: none;
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .modal-input::placeholder {
+        color: rgba(160, 160, 192, 0.6);
+    }
+
+    .modal-input:focus {
+        border-color: var(--accent-primary);
+        background: rgba(255,255,255,0.08);
+        box-shadow: 0 0 0 2px rgba(3,233,244,0.15);
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(3, 233, 244, 0.1);
+    }
+
+    .modal-footer button {
+        padding: 11px 18px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        letter-spacing: 0.02em;
+    }
+
+    .modal-footer .secondary {
+        background: rgba(255,255,255,0.08);
+        color: var(--text-main);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .modal-footer .secondary:hover {
+        background: rgba(255,255,255,0.12);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+    }
+
+    .modal-footer .primary {
+        background: linear-gradient(135deg, var(--accent-primary), #00b8d4);
+        color: #000;
+        box-shadow: 0 8px 20px rgba(3,233,244,0.3);
+        border: none;
+    }
+
+    .modal-footer .primary:hover {
+        box-shadow: 0 10px 30px rgba(3,233,244,0.4);
+        transform: translateY(-2px);
+    }
+
+    .modal-footer .primary:active {
+        transform: translateY(0);
+    }
+
+
+
+    .modal-error {
+        color: #ff6b6b;
+        font-size: 0.9rem;
+        margin-top: 8px;
+        padding: 10px 12px;
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 8px;
+        letter-spacing: 0.01em;
+    }
+
+    .section-clear-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-main);
+        cursor: pointer;
+        padding: 6px 8px;
+        font-size: 1rem;
+        margin-left: auto;
+        margin-right: 12px;
+        transition: all 0.2s;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .section-clear-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--accent-primary);
+        box-shadow: 0 0 10px rgba(3, 233, 244, 0.25);
+    }
+
+    /* Glass Panel */
+    .log-section { 
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px; 
+        margin-bottom: 24px; 
+        overflow: hidden; 
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .log-section:hover {
+        border-color: var(--glass-highlight);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .log-section[open] {
+        background: rgba(20, 20, 35, 0.6);
+        border-color: rgba(3, 233, 244, 0.3);
+    }
+
+    .section-header { 
+        font-size: 1.1rem; 
+        font-weight: 600; 
+        padding: 20px 24px; 
+        cursor: pointer; 
+        color: var(--text-main); 
+        list-style: none; 
+        display: flex;
+        align-items: center;
+        user-select: none;
+        transition: background 0.3s;
+        letter-spacing: 0.03em;
+    }
+
+    .section-header:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .section-header::-webkit-details-marker { 
+        display: none; 
+    }
+    
+    /* Animated Arrow */
+    .section-header:after { 
+        content: '+'; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--glass-border);
+        margin-left: auto; 
+        transition: all 0.3s ease;
+        font-family: var(--font-mono);
+        font-size: 1.2em;
+        font-weight: 400;
+    }
+    
+    .log-section[open] .section-header:after { 
+        transform: rotate(45deg); 
+        background: var(--accent-primary);
+        color: black;
+        box-shadow: 0 0 15px var(--accent-primary);
+    }
+    
+    .table-container {
+        padding: 0;
+        border-top: 1px solid var(--glass-border);
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .clean-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        border-spacing: 0; 
+    }
+    
+    .clean-table th, 
+    .clean-table td { 
+        padding: 16px 24px; 
+        text-align: left; 
+        border-bottom: 1px solid var(--glass-border); 
+    }
+    
+    .clean-table th { 
+        background: rgba(0, 0, 0, 0.2);
+        color: var(--text-muted); 
+        text-transform: uppercase; 
+        font-size: 0.75rem; 
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        font-family: var(--font-mono);
+    }
+    
+    .clean-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .clean-table tbody tr {
+        transition: background 0.2s;
+    }
+
+    .clean-table tbody tr:hover { 
+        background: rgba(255, 255, 255, 0.03); 
+    }
+    
+    .table-responsive { 
+        overflow-x: auto; 
+    }
+    
+    /* Futuristic Badges */
+    .badge { 
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px; 
+        border-radius: 4px; 
+        font-size: 0.7rem; 
+        font-weight: 700; 
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Badge Glow Effect */
+    .badge::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        opacity: 0.15;
+        z-index: -1;
+    }
+
+    .badge-allow { 
+        color: var(--status-success); 
+        border: 1px solid rgba(57, 255, 20, 0.3);
+    }
+    .badge-allow::before { 
+        background: var(--status-success); 
+    }
+
+    .badge-clean { 
+        color: var(--status-success); 
+        border: 1px solid rgba(57, 255, 20, 0.3);
+    }
+    .badge-clean::before { 
+        background: var(--status-success); 
+    }
+
+    .badge-scan_ok { 
+        color: var(--status-success); 
+        border: 1px solid rgba(57, 255, 20, 0.3);
+    }
+
+    .badge-info { 
+        color: var(--accent-primary); 
+        border: 1px solid rgba(3, 233, 244, 0.3);
+    }
+    .badge-info::before { 
+        background: var(--accent-primary); 
+    }
+
+    .badge-low { 
+        color: var(--accent-primary); 
+        border: 1px solid rgba(3, 233, 244, 0.3);
+    }
+
+    .badge-blocked { 
+        color: var(--status-danger); 
+        border: 1px solid rgba(255, 49, 49, 0.3);
+    }
+    .badge-blocked::before { 
+        background: var(--status-danger); 
+    }
+
+    .badge-critical { 
+        color: var(--status-danger); 
+        border: 1px solid rgba(255, 49, 49, 0.3);
+    }
+
+    .badge-high { 
+        color: var(--status-danger); 
+        border: 1px solid rgba(255, 49, 49, 0.3);
+    }
+
+    .badge-scan_failed { 
+        color: var(--status-danger); 
+        border: 1px solid rgba(255, 49, 49, 0.3);
+    }
+
+    .badge-warning { 
+        color: var(--status-warning); 
+        border: 1px solid rgba(255, 184, 0, 0.3);
+    }
+    .badge-warning::before { 
+        background: var(--status-warning); 
+    }
+
+    .badge-suspicious { 
+        color: var(--status-warning); 
+        border: 1px solid rgba(255, 184, 0, 0.3);
+    }
+
+    .badge-medium { 
+        color: var(--status-warning); 
+        border: 1px solid rgba(255, 184, 0, 0.3);
+    }
+
+    .badge-unknown { 
+        color: var(--text-muted); 
+        border: 1px solid rgba(160, 160, 192, 0.3);
+    }
+    .badge-unknown::before { 
+        background: var(--text-muted); 
+    }
+    
+    pre { 
+        white-space: pre-wrap; 
+        background: rgba(0, 0, 0, 0.3); 
+        padding: 12px; 
+        border-radius: 8px; 
+        color: #d0d0e0; 
+        font-family: var(--font-mono);
+        font-size: 0.8em;
+        margin: 0;
+        max-height: 150px;
+        overflow-y: auto;
+        border: 1px solid var(--glass-border);
+    }
+    
+    a.log-link { 
+        color: var(--accent-primary); 
+        text-decoration: none; 
+        transition: all 0.2s;
+        border-bottom: 1px dotted transparent;
+    }
+    
+    a.log-link:hover { 
+        color: #fff; 
+        border-bottom-color: var(--accent-primary);
+        text-shadow: 0 0 10px var(--accent-primary);
+    }
+    
+    .timestamp-cell {
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+    }
+    
+    .icon { 
+        font-size: 1.2em; 
+        margin-right: 12px; 
+        color: var(--accent-primary);
+        width: 1.2em;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .lock-icon {
+        font-size: 1rem;
+        color: var(--text-main);
+        width: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .clear-icon {
+        font-size: 1rem;
+        color: var(--status-danger);
+        width: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .section-clear-btn:hover .clear-icon {
+        color: var(--accent-primary);
+    }
+
+    .header-title {
+        background: linear-gradient(to right, #fff, var(--accent-primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        margin-bottom: 3rem;
+        margin-top: 0;
+        font-size: 2.5rem;
+        text-align: center;
+        font-weight: 700;
+        font-family: var(--font-main);
+        flex: 1;
+    }
+
+    .logs-header-wrapper {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .logs-header-wrapper .header-title {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 0;
+        width: 100%;
+    }
+
+    .clear-all-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px;
+        border-radius: 12px;
+        border: 1.5px solid var(--accent-primary);
+        background: linear-gradient(135deg, rgba(3, 233, 244, 0.1) 0%, rgba(3, 233, 244, 0.05) 100%);
+        color: var(--accent-primary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        font-size: 0.95rem;
+        position: relative;
+        z-index: 10;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .clear-all-btn:hover {
+        background: linear-gradient(135deg, rgba(3, 233, 244, 0.15) 0%, rgba(3, 233, 244, 0.1) 100%);
+        box-shadow: 0 0 20px rgba(3, 233, 244, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .clear-all-btn:active {
+        transform: translateY(0);
+    }
+
+    .btn-label {
+        display: inline;
+    }
+
+    @media (max-width: 640px) {
+        .btn-label {
+            display: none;
+        }
+        
+        .clear-all-btn {
+            padding: 10px 12px;
+        }
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    @media (max-width: 768px) {
+        .clean-table th, 
+        .clean-table td { 
+            padding: 12px 16px; 
+        }
+        
+        .header-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="max-w-7xl mx-auto p-4 md:p-8">
+    <div class="logs-header-wrapper">
+        <h2 class="header-title">Activity & Security Logs</h2>
+        <button id="clear-all-btn" class="clear-all-btn" title="Clear all logs (requires admin verification)">
+            <i class="fas fa-trash-alt"></i>
+            <span class="btn-label">Clear All Logs</span>
+        </button>
+    </div>
+
+    <!-- Verify & Clear Modal -->
+    <div id="clear-modal" class="modal-backdrop" style="display:none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span id="modal-title">Verify to Clear Logs</span>
+                <button class="close-modal" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Enter admin credentials to clear logs. Viewing does not require a password.</p>
+                <label class="input-label">Username</label>
+                <input id="modal-username" class="modal-input" placeholder="username" autocomplete="username" />
+                <label class="input-label">Password</label>
+                <input id="modal-password" class="modal-input" type="password" placeholder="password" autocomplete="current-password" />
+                <div id="modal-error" class="modal-error" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary" id="modal-cancel">Cancel</button>
+                <button class="primary" id="modal-confirm">Verify & Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================== -->
+    <!-- URL SCAN & THREAT LOOKUP -->
+    <!-- ======================== -->
+    <details class="log-section" open>
+        <summary class="section-header">
+            <i class="icon fas fa-globe"></i> Web Activity & Threat Lookup
+            <button class="section-clear-btn" data-category="url_scan" title="Clear this section" type="button">
+                <i class="clear-icon fas fa-trash-alt"></i>
+            </button>
+        </summary>
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>URL</th>
+                            <th>Status</th>
+                            <th>Severity</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% if logs_url and logs_url|length > 0 %}
+                        {% for log in logs_url %}
+                        <tr>
+                            <td class="timestamp-cell">{{ format_timestamp_ist(log.timestamp) }}</td>
+                            <td><a href="{{ log.url }}" target="_blank" class="log-link">{{ log.url or 'N/A' }}</a></td>
+                            <td>
+                                {% set status = (log.status or 'UNKNOWN').upper() %}
+                                {% if status in ['ALLOW','SCAN_OK','CLEAN','SAFE'] %}
+                                    <span class="badge badge-allow">{{ log.status or 'UNKNOWN' }}</span>
+                                {% elif status in ['BLOCKED','SCAN_FAILED','CRITICAL','HIGH','MALICIOUS'] %}
+                                    <span class="badge badge-blocked">{{ log.status or 'UNKNOWN' }}</span>
+                                {% elif status in ['WARNING','SUSPICIOUS','MEDIUM'] %}
+                                    <span class="badge badge-warning">{{ log.status or 'UNKNOWN' }}</span>
+                                {% else %}
+                                    <span class="badge badge-unknown">{{ log.status or 'UNKNOWN' }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set severity = (log.severity or 'UNKNOWN').upper() %}
+                                {% if severity in ['ALLOW','SCAN_OK','CLEAN','INFO','LOW'] %}
+                                    <span class="badge badge-clean">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% elif severity in ['BLOCKED','SCAN_FAILED','CRITICAL','HIGH'] %}
+                                    <span class="badge badge-critical">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% elif severity in ['WARNING','SUSPICIOUS','MEDIUM'] %}
+                                    <span class="badge badge-medium">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% else %}
+                                    <span class="badge badge-unknown">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.flagged_reason or 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="5" class="text-center" style="color: var(--text-muted); padding: 2rem;">No URL Scan logs found.</td></tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </details>
+
+    <!-- ======================== -->
+    <!-- EMAIL SCANNER LOGS -->
+    <!-- ======================== -->
+    <details class="log-section">
+        <summary class="section-header">
+            <i class="icon fas fa-envelope"></i> Email Scanner
+            <button class="section-clear-btn" data-category="email" title="Clear this section" type="button">
+                <i class="clear-icon fas fa-trash-alt"></i>
+            </button>
+        </summary>
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Sender</th>
+                            <th>Status</th>
+                            <th>Severity</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% if logs_email and logs_email|length > 0 %}
+                        {% for log in logs_email %}
+                        <tr>
+                            <td class="timestamp-cell">{{ format_timestamp_ist(log.timestamp) }}</td>
+                            <td>{{ log.sender or 'UNKNOWN' }}</td>
+                            <td>
+                                {% set status = (log.status or 'UNKNOWN').upper() %}
+                                {% if status in ['ALLOW','SCAN_OK','CLEAN'] %}
+                                    <span class="badge badge-allow">{{ log.status or 'UNKNOWN' }}</span>
+                                {% elif status in ['BLOCKED','SCAN_FAILED','CRITICAL','HIGH'] %}
+                                    <span class="badge badge-blocked">{{ log.status or 'UNKNOWN' }}</span>
+                                {% elif status in ['WARNING','SUSPICIOUS','MEDIUM'] %}
+                                    <span class="badge badge-warning">{{ log.status or 'UNKNOWN' }}</span>
+                                {% else %}
+                                    <span class="badge badge-unknown">{{ log.status or 'UNKNOWN' }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set severity = (log.severity or 'UNKNOWN').upper() %}
+                                {% if severity in ['ALLOW','SCAN_OK','CLEAN','INFO','LOW'] %}
+                                    <span class="badge badge-clean">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% elif severity in ['BLOCKED','SCAN_FAILED','CRITICAL','HIGH'] %}
+                                    <span class="badge badge-critical">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% elif severity in ['WARNING','SUSPICIOUS','MEDIUM'] %}
+                                    <span class="badge badge-medium">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% else %}
+                                    <span class="badge badge-unknown">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.flagged_reason or 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="5" class="text-center" style="color: var(--text-muted); padding: 2rem;">No Email Scanner logs found.</td></tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </details>
+
+    <!-- ======================== -->
+    <!-- SOC ANALYZER LOGS -->
+    <!-- ======================== -->
+    <details class="log-section">
+        <summary class="section-header">
+            <i class="icon fas fa-shield-alt"></i> SOC Analyzer
+            <button class="section-clear-btn" data-category="soc" title="Clear this section" type="button">
+                <i class="clear-icon fas fa-trash-alt"></i>
+            </button>
+        </summary>
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Status</th>
+                            <th>Severity</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% if logs_soc and logs_soc|length > 0 %}
+                        {% for log in logs_soc %}
+                        <tr>
+                            <td class="timestamp-cell">{{ format_timestamp_ist(log.timestamp) }}</td>
+                            <td>
+                                {% set status = (log.status or 'UNKNOWN').upper() %}
+                                {% if status in ['ALLOW','SCAN_OK','CLEAN','INFO'] %}
+                                    <span class="badge badge-info">{{ log.status or 'UNKNOWN' }}</span>
+                                {% elif status in ['BLOCKED','SCAN_FAILED','CRITICAL','HIGH'] %}
+                                    <span class="badge badge-critical">{{ log.status or 'UNKNOWN' }}</span>
+                                {% elif status in ['WARNING','SUSPICIOUS','MEDIUM'] %}
+                                    <span class="badge badge-warning">{{ log.status or 'UNKNOWN' }}</span>
+                                {% else %}
+                                    <span class="badge badge-unknown">{{ log.status or 'UNKNOWN' }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set severity = (log.severity or 'UNKNOWN').upper() %}
+                                {% if severity in ['ALLOW','SCAN_OK','CLEAN','INFO','LOW'] %}
+                                    <span class="badge badge-info">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% elif severity in ['BLOCKED','SCAN_FAILED','CRITICAL','HIGH'] %}
+                                    <span class="badge badge-critical">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% elif severity in ['WARNING','SUSPICIOUS','MEDIUM'] %}
+                                    <span class="badge badge-medium">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% else %}
+                                    <span class="badge badge-unknown">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% endif %}
+                            </td>
+                            <td><pre>{{ log.details or 'N/A' }}</pre></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="4" class="text-center" style="color: var(--text-muted); padding: 2rem;">No SOC Analyzer logs found.</td></tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </details>
+
+    <!-- ======================== -->
+    <!-- QRISHING LOGS -->
+    <!-- ======================== -->
+    <details class="log-section">
+        <summary class="section-header">
+            <i class="icon fas fa-qrcode"></i> QRishing Detector
+            <button class="section-clear-btn" data-category="qr" title="Clear this section" type="button">
+                <i class="clear-icon fas fa-trash-alt"></i>
+            </button>
+        </summary>
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Status</th>
+                            <th>Severity</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% if logs_qr and logs_qr|length > 0 %}
+                        {% for log in logs_qr %}
+                        <tr>
+                            <td class="timestamp-cell">{{ format_timestamp_ist(log.timestamp) }}</td>
+                            <td>
+                                {% set status = (log.status or 'UNKNOWN').upper() %}
+                                {% if status in ['ALLOW','SCAN_OK','CLEAN'] %}
+                                    <span class="badge badge-clean">{{ log.status or 'UNKNOWN' }}</span>
+                                {% elif status in ['BLOCKED','SCAN_FAILED','CRITICAL','HIGH'] %}
+                                    <span class="badge badge-blocked">{{ log.status or 'UNKNOWN' }}</span>
+                                {% elif status in ['WARNING','SUSPICIOUS','MEDIUM'] %}
+                                    <span class="badge badge-warning">{{ log.status or 'UNKNOWN' }}</span>
+                                {% else %}
+                                    <span class="badge badge-unknown">{{ log.status or 'UNKNOWN' }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set severity = (log.severity or 'UNKNOWN').upper() %}
+                                {% if severity in ['ALLOW','SCAN_OK','CLEAN','INFO','LOW'] %}
+                                    <span class="badge badge-clean">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% elif severity in ['BLOCKED','SCAN_FAILED','CRITICAL','HIGH'] %}
+                                    <span class="badge badge-critical">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% elif severity in ['WARNING','SUSPICIOUS','MEDIUM'] %}
+                                    <span class="badge badge-medium">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% else %}
+                                    <span class="badge badge-unknown">{{ log.severity or 'UNKNOWN' }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.flagged_reason or 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="4" class="text-center" style="color: var(--text-muted); padding: 2rem;">No QRishing logs found.</td></tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </details>
+</div>
+
+<script>
+    (function() {
+        const modal = document.getElementById('clear-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const closeBtn = modal.querySelector('.close-modal');
+        const cancelBtn = document.getElementById('modal-cancel');
+        const confirmBtn = document.getElementById('modal-confirm');
+        const userInput = document.getElementById('modal-username');
+        const passInput = document.getElementById('modal-password');
+        const errorBox = document.getElementById('modal-error');
+
+        let currentCategory = null;
+
+        function openModal(category) {
+            currentCategory = category;
+            modal.style.display = 'flex';
+            errorBox.style.display = 'none';
+            userInput.value = '';
+            passInput.value = '';
+            
+            if (category === 'all') {
+                modalTitle.textContent = 'Verify to Clear All Logs';
+            } else {
+                const categoryNames = {
+                    'url_scan': 'Web Activity & Threat Lookup',
+                    'email': 'Email Scanner',
+                    'soc': 'SOC Analyzer',
+                    'qr': 'QRishing Detector'
+                };
+                modalTitle.textContent = `Verify to Clear ${categoryNames[category] || category}`;
+            }
+            
+            setTimeout(() => userInput.focus(), 50);
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            currentCategory = null;
+        }
+
+        async function clearLogs() {
+            errorBox.style.display = 'none';
+            const username = userInput.value.trim();
+            const password = passInput.value;
+
+            try {
+                const payload = { username, password };
+                if (currentCategory && currentCategory !== 'all') {
+                    payload.category = currentCategory;
+                }
+
+                const resp = await fetch('/api/clear-logs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!resp.ok) {
+                    const data = await resp.json().catch(() => ({}));
+                    const msg = data.error || 'Verification failed';
+                    errorBox.textContent = msg;
+                    errorBox.style.display = 'block';
+                    return;
+                }
+
+                closeModal();
+                window.location.reload();
+            } catch (e) {
+                errorBox.textContent = 'Request failed. Please try again.';
+                errorBox.style.display = 'block';
+            }
+        }
+
+        // Global handlers for section clear buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.section-clear-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const btn = e.target.closest('.section-clear-btn');
+                const category = btn.dataset.category;
+                openModal(category);
+            }
+        });
+
+        // Clear All button handler
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openModal('all');
+            });
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        confirmBtn.addEventListener('click', clearLogs);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        passInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                clearLogs();
+            }
+        });
+    })();
+</script>
+
+<!-- Load Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<script>
+// Add some interactivity to the details elements
+document.addEventListener('DOMContentLoaded', function() {
+    const detailsElements = document.querySelectorAll('.log-section');
+    
+    detailsElements.forEach(detail => {
+        detail.addEventListener('toggle', function() {
+            if (this.open) {
+                // Add a subtle pulse animation when opening
+                this.style.animation = 'none';
+                setTimeout(() => {
+                    this.style.animation = 'slideDown 0.3s ease-out';
+                }, 10);
+            }
+        });
+    });
+    
+    // Add keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && document.activeElement.classList.contains('section-header')) {
+            e.preventDefault();
+            document.activeElement.click();
+        }
+    });
+});
+</script>
+{% endblock %}

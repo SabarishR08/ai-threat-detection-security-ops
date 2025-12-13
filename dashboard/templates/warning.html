@@ -1,0 +1,7 @@
+<!-- warning.html - Popup for Blocked URLs -->
+{% extends 'base.html' %}
+{% block content %}
+<h2>Warning!</h2>
+<p>This URL is flagged as unsafe. Proceed with caution.</p>
+<button onclick="window.history.back()">Go Back</button>
+{% endblock %}

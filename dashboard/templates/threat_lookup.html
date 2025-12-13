@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+{% block title %}🔍 Threat Lookup{% endblock %}
+
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Lookup Terminal</title>
+    <!-- Load Tailwind CSS for modern utilities and responsiveness -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Load Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CUSTOM CYBERPUNK STYLES (Aligned with base.html) --- */
+        /* Note: CSS variables are inherited from base.html:
+           --glass-bg, --glass-border, --text-main, --text-muted,
+           --accent-primary, --accent-secondary, 
+           --status-success, --status-warning, --status-danger,
+           --font-main, --font-mono */
+        
+        /* Glass Panel Effect - Uses base.html variables */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(3, 233, 244, 0.4), 0 0 10px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Neon Glow Effects */
+        .glow-primary {
+            color: var(--accent-primary);
+            text-shadow: 0 0 5px var(--accent-primary), 0 0 15px rgba(3, 233, 244, 0.7);
+        }
+        .glow-danger {
+            color: var(--status-danger);
+            text-shadow: 0 0 5px var(--status-danger), 0 0 15px rgba(255, 49, 49, 0.7);
+        }
+        .glow-success {
+            color: var(--status-success);
+            text-shadow: 0 0 5px var(--status-success), 0 0 15px rgba(57, 255, 20, 0.7);
+        }
+        .glow-warning {
+            color: var(--status-warning);
+            text-shadow: 0 0 5px var(--status-warning), 0 0 15px rgba(255, 215, 0, 0.7);
+        }
+
+        /* Neon Button - Inherits from base.html, custom additions for page-specific buttons */
+        .neon-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Input Field Styling - Uses base.html variables */
+        #lookupInput {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            box-shadow: inset 0 0 10px rgba(3, 233, 244, 0.1);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+        }
+
+        #lookupInput:focus {
+            box-shadow: 0 0 15px rgba(3, 233, 244, 0.6) !important;
+            border-color: var(--accent-primary) !important;
+            transform: translateY(-1px);
+        }
+
+        /* Result boxes - Uses base.html variables */
+        .result-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+            border: 2px solid;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-danger {
+            border-color: var(--status-danger);
+            box-shadow: 0 0 15px rgba(255, 49, 49, 0.3);
+            background: linear-gradient(135deg, rgba(255, 49, 49, 0.15), var(--glass-bg));
+        }
+
+        .result-success {
+            border-color: var(--status-success);
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
+            background: linear-gradient(135deg, rgba(57, 255, 20, 0.15), var(--glass-bg));
+        }
+        
+        .result-loading {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(3, 233, 244, 0.3);
+            background: linear-gradient(135deg, rgba(3, 233, 244, 0.15), var(--glass-bg));
+        }
+        
+        /* Utility for text colors */
+        .text-primary { color: var(--accent-primary); }
+        .text-muted { color: var(--text-muted); }
+
+        /* Quick Example Buttons */
+        .quick-example-btn {
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            line-height: 1rem;
+            border-width: 1px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-red {
+            background-color: rgba(139, 0, 0, 0.4);
+            border-color: #FF3131;
+            color: #FF7777;
+        }
+        .btn-red:hover {
+            background-color: rgba(139, 0, 0, 0.7);
+            box-shadow: 0 0 8px #FF3131;
+        }
+
+        .btn-green {
+            background-color: rgba(0, 80, 0, 0.4);
+            border-color: #39FF14;
+            color: #77FF77;
+        }
+        .btn-green:hover {
+            background-color: rgba(0, 80, 0, 0.7);
+            box-shadow: 0 0 8px #39FF14;
+        }
+
+        .btn-blue {
+            background-color: rgba(0, 0, 80, 0.4);
+            border-color: #03E9F4;
+            color: #77FFFF;
+        }
+        .btn-blue:hover {
+            background-color: rgba(0, 0, 80, 0.7);
+            box-shadow: 0 0 8px #03E9F4;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl md:text-5xl font-extrabold mb-3 glow-primary tracking-widest">
+                <i class="fas fa-satellite-dish mr-3"></i>CYBER INTELLIGENCE GAUGE
+            </h1>
+            <p class="text-muted font-mono text-sm md:text-base tracking-wider">
+                Real-time URL, IP, and Domain Reputation Analysis
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Lookup Form (V1 Structure) -->
+            <div class="lg:col-span-2">
+                <div class="glass-panel p-6 sm:p-8 h-full">
+                    <div class="flex items-center justify-between mb-6 border-b border-glass-border pb-3">
+                        <h2 class="text-2xl font-bold text-primary">
+                            <i class="fas fa-terminal mr-2"></i> Threat Analysis Query
+                        </h2>
+                        <a href="https://phishtank.org/" target="_blank" rel="noopener" class="text-xs p-2 bg-gray-800 rounded-lg neon-box flex items-center space-x-2 hover:bg-gray-700 transition">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span>Open PhishTank</span>
+                        </a>
+                    </div>
+                    
+                    <form id="threatLookupForm" class="space-y-8">
+                        <div>
+                            <label for="lookupInput" class="block text-sm font-medium mb-3 text-primary">
+                                <i class="fas fa-link mr-2"></i> Enter URL, IP Address, or Domain
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="text" 
+                                    id="lookupInput" 
+                                    class="w-full p-4 bg-black/30 border border-glass-border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 font-mono text-lg"
+                                    placeholder="https://malware-server.com or 8.8.8.8"
+                                    autocomplete="off"
+                                >
+                                <div class="absolute right-4 top-4 text-muted">
+                                    <i class="fas fa-bolt text-primary"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-muted mt-2 ml-1">
+                                <i class="fas fa-info-circle mr-1"></i> 
+                                Supports URLs, IPv4/IPv6 addresses, and domain names
+                            </p>
+                        </div>
+
+                        <!-- Quick Examples (V1 Feature) -->
+                        <div>
+                            <p class="text-sm text-muted mb-3">Quick checks:</p>
+                            <div class="flex flex-wrap gap-3">
+                                <button type="button" onclick="setExample('http://malicious-test.com')" 
+                                        class="quick-example-btn btn-red">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    Malicious Test
+                                </button>
+                                <button type="button" onclick="setExample('https://web.whatsapp.com')" 
+                                        class="quick-example-btn btn-green">
+                                    <i class="fas fa-shield-check mr-1"></i>
+                                    Safe Domain
+                                </button>
+                                <button type="button" onclick="setExample('8.8.8.8')" 
+                                        class="quick-example-btn btn-blue">
+                                    <i class="fas fa-server mr-1"></i>
+                                    Public DNS (IP)
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="neon-button w-full py-4 font-bold text-lg rounded-xl relative group">
+                            <i class="fas fa-search mr-3"></i>
+                            <span>Analyze Threat</span>
+                            <i class="fas fa-bolt ml-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </button>
+                    </form>
+
+                    <!-- Results Section -->
+                    <div id="lookupResult" class="mt-10">
+                        <div class="text-center py-10">
+                            <i class="fas fa-satellite-dish text-5xl text-glass-border mb-4"></i>
+                            <p class="text-muted">Enter a URL, IP, or domain to initiate the analysis sequence</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Information Cards (V1 Structure) -->
+            <div class="space-y-8">
+                <!-- Threat Intelligence Sources Card -->
+                <div class="glass-panel p-6">
+                    <h3 class="text-xl font-bold mb-4 text-primary border-b border-glass-border pb-2">
+                        <i class="fas fa-database mr-2"></i> Intelligence Feeds
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3 p-3 bg-black/20 rounded-lg border-l-4 border-red-500/80">
+                            <div class="w-10 h-10 bg-red-900/30 rounded-full flex items-center justify-center">
+                                <i class="fas fa-virus text-red-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-white">VirusTotal</h4>
+                                <p class="text-xs text-muted">Multi-engine malware detection (Core)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-black/20 rounded-lg border-l-4 border-orange-500/80">
+                            <div class="w-10 h-10 bg-orange-900/30 rounded-full flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-orange-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-white">AbuseIPDB</h4>
+                                <p class="text-xs text-muted">IP reputation reporting (Planned)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-black/20 rounded-lg border-l-4 border-blue-500/80">
+                            <div class="w-10 h-10 bg-blue-900/30 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-secret text-blue-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-white">WHOIS Registry</h4>
+                                <p class="text-xs text-muted">Domain registration data (Planned)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How It Works Card -->
+                <div class="glass-panel p-6">
+                    <h3 class="text-xl font-bold mb-4 text-primary border-b border-glass-border pb-2">
+                        <i class="fas fa-project-diagram mr-2"></i> Operational Flow
+                    </h3>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-start">
+                            <i class="fas fa-search text-primary mt-1 mr-3"></i>
+                            <span>Initiate: Input URL/IP and execute analysis.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-bolt text-yellow-400 mt-1 mr-3"></i>
+                            <span>Query: Backend service polls /check-url.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-shield-alt text-green-400 mt-1 mr-3"></i>
+                            <span>Assess: Status is retrieved and results displayed.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-history text-blue-400 mt-1 mr-3"></i>
+                            <span>Report: Instant safety assessment displayed below.</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+
+<script>
+// Set example function (from V1)
+function setExample(query) {
+    document.getElementById('lookupInput').value = query;
+    document.getElementById('lookupInput').focus();
+    
+    // Add a little animation
+    const input = document.getElementById('lookupInput');
+    input.style.transform = 'scale(1.01)';
+    setTimeout(() => {
+        input.style.transform = 'scale(1)';
+    }, 200);
+}
+
+document.getElementById("threatLookupForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    
+    let query = document.getElementById("lookupInput").value.trim();
+    let resultDiv = document.getElementById("lookupResult");
+    let submitBtn = this.querySelector('button[type="submit"]');
+
+    if (!query) {
+        // V1 Danger UI for validation error
+        resultDiv.innerHTML = `
+            <div class="result-box result-danger">
+                <div class="flex items-center justify-center space-x-4">
+                    <i class="fas fa-times-circle text-3xl glow-danger"></i>
+                    <div class="text-left">
+                        <p class="glow-danger font-bold text-xl">QUERY FAILED</p>
+                        <p class="text-sm text-muted">Input field cannot be empty. Check your syntax.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // Disable button and show V1 loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `
+        <i class="fas fa-spinner fa-spin mr-3"></i>
+        <span>Analyzing Data Streams...</span>
+    `;
+
+    // V1 Loading UI
+    resultDiv.innerHTML = `
+        <div class="result-box result-loading">
+            <div class="text-center">
+                <i class="fas fa-brain fa-spin text-4xl glow-primary mb-4"></i>
+                <h3 class="text-xl font-bold text-white mb-2">Analyzing Threat: <span class="font-mono text-primary">${query}</span></h3>
+                <p class="text-muted mb-6">Querying intelligence sources...</p>
+                <div class="max-w-md mx-auto space-y-3">
+                    <div class="flex items-center justify-between text-sm p-2 bg-black/30 rounded-full">
+                        <span class="text-muted">VirusTotal Scan</span>
+                        <span class="glow-primary animate-pulse text-xs">Processing...</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm p-2 bg-black/30 rounded-full">
+                        <span class="text-muted">AbuseIPDB Check</span>
+                        <span class="glow-primary animate-pulse text-xs">Awaiting API...</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm p-2 bg-black/30 rounded-full">
+                        <span class="text-muted">WHOIS Lookup</span>
+                        <span class="glow-primary animate-pulse text-xs">Awaiting API...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // --- INTEGRATED /CHECK-URL FETCH LOGIC ---
+    fetch("/check-url", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: query }) 
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Use the V1 detailed result UI based on the response status
+        if (data.status === "Malicious") {
+            resultDiv.innerHTML = ` 
+                <div class="result-box result-danger">
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/50">
+                            <i class="fas fa-skull-crossbones text-4xl glow-danger"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold glow-danger mb-4">THREAT LEVEL: CRITICAL</h3>
+                        <p class="font-mono text-base mb-4 text-white bg-black/50 p-3 rounded-lg border border-red-900/50">${query}</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-left">
+                            <div class="p-4 bg-red-900/20 rounded-lg border border-red-700/50">
+                                <h4 class="font-bold text-red-300 mb-2 border-b border-red-700/30 pb-1">
+                                    <i class="fas fa-biohazard mr-2"></i> Threat Details
+                                </h4>
+                                <p class="text-sm">Confirmed malicious flag from backend service. Associated with high-risk activity.</p>
+                            </div>
+                            <div class="p-4 bg-orange-900/20 rounded-lg border border-orange-700/50">
+                                <h4 class="font-bold text-orange-300 mb-2 border-b border-orange-700/30 pb-1">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i> Remedial Action
+                                </h4>
+                                <ul class="text-sm space-y-1 list-disc list-inside">
+                                    <li>Block IP/Domain immediately.</li>
+                                    <li>Quarantine any host that connected.</li>
+                                    <li>Source: Backend API (/check-url)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (data.status === "Suspicious") {
+            resultDiv.innerHTML = `
+                <div class="result-box result-warning">
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-orange-500/50">
+                            <i class="fas fa-exclamation-triangle text-4xl glow-warning"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold glow-warning mb-4">STATUS: SUSPICIOUS</h3>
+                        <p class="font-mono text-base mb-4 text-white bg-black/50 p-3 rounded-lg border border-orange-900/50">${query}</p>
+                        <p class="text-muted mb-6">Potential phishing indicators detected. Treat as high risk.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-left">
+                            <div class="p-4 bg-orange-900/20 rounded-lg border border-orange-700/50">
+                                <h4 class="font-bold text-orange-300 mb-2 border-b border-orange-700/30 pb-1">
+                                    <i class="fas fa-shield-alt mr-2"></i> Recommended Actions
+                                </h4>
+                                <ul class="text-sm space-y-1 list-disc list-inside">
+                                    <li>Do not proceed to this site.</li>
+                                    <li>Investigate and block in security controls.</li>
+                                    <li>Source: Backend API (/check-url)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (data.status === "Unknown") {
+            const reason = data.reason || "Limited intelligence available from sources.";
+            resultDiv.innerHTML = `
+                <div class="result-box result-neutral">
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-600/70">
+                            <i class="fas fa-question-circle text-4xl text-slate-200"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold text-slate-200 mb-4">STATUS: UNKNOWN</h3>
+                        <p class="font-mono text-base mb-4 text-white bg-black/50 p-3 rounded-lg border border-slate-700/70">${query}</p>
+                        <p class="text-muted mb-6">${reason}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-left">
+                            <div class="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                                <h4 class="font-bold text-slate-200 mb-2 border-b border-slate-700/40 pb-1">
+                                    <i class="fas fa-info-circle mr-2"></i> Next Steps
+                                </h4>
+                                <ul class="text-sm space-y-1 list-disc list-inside text-muted">
+                                    <li>Retry with fresh lookup or after enabling more intel sources.</li>
+                                    <li>Treat as suspicious until confirmed safe.</li>
+                                    <li>Source: Backend API (/check-url)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `
+                <div class="result-box result-success">
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/50">
+                            <i class="fas fa-lock text-4xl glow-success"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold glow-success mb-4">STATUS: CLEAN / SAFE</h3>
+                        <p class="font-mono text-base mb-4 text-white bg-black/50 p-3 rounded-lg border border-green-900/50">${query}</p>
+                        <p class="text-muted mb-6">No critical malicious activity detected across primary intelligence feeds.</p>
+                        
+                        <div class="grid grid-cols-3 gap-4 mt-6">
+                            <div class="text-center p-3 bg-green-900/20 rounded-lg border border-green-700/30">
+                                <i class="fas fa-check-circle text-3xl glow-success mb-2"></i>
+                                <p class="text-xs text-muted">Backend Clear</p>
+                            </div>
+                            <div class="text-center p-3 bg-green-900/20 rounded-lg border border-green-700/30">
+                                <i class="fas fa-check-circle text-3xl glow-success mb-2"></i>
+                                <p class="text-xs text-muted">VT Proxy OK</p>
+                            </div>
+                            <div class="text-center p-3 bg-green-900/20 rounded-lg border border-green-700/30">
+                                <i class="fas fa-check-circle text-3xl glow-success mb-2"></i>
+                                <p class="text-xs text-muted">Low Risk Score</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        // Use V1 Error UI for network issues
+        resultDiv.innerHTML = `
+            <div class="result-box result-danger" style="border-color: rgba(255, 100, 0, 0.6);">
+                <div class="flex items-center justify-center space-x-4">
+                    <i class="fas fa-radiation text-3xl glow-danger"></i>
+                    <div class="text-left">
+                        <p class="glow-danger font-bold text-xl">NETWORK ERROR</p>
+                        <p class="text-sm text-muted">Unable to connect to backend service at /check-url. Check network or server status.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        console.error("Fetch Error:", error.message);
+    })
+    .finally(() => {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `
+            <i class="fas fa-search mr-3"></i>
+            <span>Analyze Threat</span>
+            <i class="fas fa-bolt ml-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+        `;
+    });
+});
+</script>
+{% endblock %}

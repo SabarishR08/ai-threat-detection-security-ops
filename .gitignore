@@ -1,0 +1,109 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+.virtualenv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+test_outputs/
+*.log
+
+# Flask
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Credentials
+credentials.json
+token.pickle
+*.pem
+*.key
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Cache
+cache/
+*.cache
+__pycache__/
+
+# Media/Uploads
+uploads/
+media/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.pdf
+!backend/scripts/uploads/.gitkeep
+
+# Test outputs
+test_outputs/
+pytest_out.txt
+pytest_cov.txt
+test_output.txt
+*_test_results.json
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Database
+database/
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node modules (for browser extension)
+node_modules/
+package-lock.json

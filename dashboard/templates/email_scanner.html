@@ -1,0 +1,1137 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="max-w-7xl mx-auto fade-in">
+    <!-- Page Header -->
+    <div class="text-center mb-8">
+        <h1 class="header-title text-3xl mb-4">
+            <i class="fas fa-envelope text-primary"></i> Email Threat Scanner
+        </h1>
+        <p class="text-muted font-mono">Fetch and analyze Gmail emails for phishing threats & suspicious content</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="neon-box p-8">
+        <!-- Form Section Header -->
+        <div class="form-section-header mb-8">
+            <div class="flex items-center justify-center gap-4 mb-6">
+                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center shadow-lg">
+                    <i class="fas fa-envelope-open-text text-white text-2xl"></i>
+                </div>
+                <div class="text-center">
+                    <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Email Fetcher & Analyzer</h2>
+                    <p class="text-base text-muted">Connect to Gmail API to fetch and scan recent emails</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="relative mb-8">
+            <div class="w-full h-px bg-gradient-to-r from-transparent via-accent-primary to-transparent"></div>
+        </div>
+
+        <!-- FETCH FORM -->
+        <form action="/email_scanner/fetch" method="post" class="max-w-2xl mx-auto">
+            <div class="form-group mb-8">
+                <label class="form-label">
+                    <i class="fas fa-envelope text-accent-primary mr-3"></i>
+                    <span>Number of Recent Emails to Fetch</span>
+                </label>
+                <p class="form-description">
+                    Enter how many recent emails you want to fetch and analyze (1-50)
+                </p>
+                <input type="number" name="count" min="1" max="50" value="5" 
+                       class="form-input" placeholder="Enter number of emails">
+            </div>
+
+            <button type="submit" class="neon-button-purple w-full group relative overflow-hidden">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <i class="fas fa-download mr-2"></i> Fetch & Analyze Emails
+                <span class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+            </button>
+        </form>
+
+        <!-- RESULTS -->
+        {% if emails %}
+        <div class="border-t border-glass-border pt-6">
+            <div class="flex items-center justify-between mb-6">
+                <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-primary"></i> Analysis Results
+                </h4>
+                <div class="text-sm text-muted font-mono">
+                    <i class="fas fa-clock mr-1"></i> Scanned: {{ emails|length }} emails
+                </div>
+            </div>
+
+            <!-- Compact Scoreboard -->
+            {% set total_urls = 0 %}
+            {% set safe_count = 0 %}
+            {% set threat_count = 0 %}
+            {% for mail in emails %}
+                {% set total_urls = total_urls + mail.urls|length %}
+                {% for url, status in mail.urls.items() %}
+                    {% if status == 'Safe' %}
+                        {% set safe_count = safe_count + 1 %}
+                    {% elif status == 'Malicious' %}
+                        {% set threat_count = threat_count + 1 %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+            
+            <div class="compact-scoreboard mb-8">
+                <div class="scoreboard-header">
+                    <span class="scoreboard-title">
+                        <i class="fas fa-tachometer-alt text-primary"></i> Scan Summary
+                    </span>
+                </div>
+                
+                <div class="scoreboard-divider"></div>
+                
+                <div class="scoreboard-values">
+                    <div class="scoreboard-item">
+                        <div class="value text-primary">{{ emails|length }}</div>
+                        <div class="label">
+                            <i class="fas fa-envelope text-xs"></i>
+                            <span>Emails Scanned</span>
+                        </div>
+                    </div>
+                    
+                    <div class="scoreboard-separator"></div>
+                    
+                    <div class="scoreboard-item">
+                        <div class="value text-accent-secondary">{{ total_urls }}</div>
+                        <div class="label">
+                            <i class="fas fa-link text-xs"></i>
+                            <span>URLs Found</span>
+                        </div>
+                    </div>
+                    
+                    <div class="scoreboard-separator"></div>
+                    
+                    <div class="scoreboard-item success">
+                        <div class="value text-status-success">{{ safe_count }}</div>
+                        <div class="label">
+                            <i class="fas fa-shield-check text-xs"></i>
+                            <span>Safe URLs</span>
+                        </div>
+                    </div>
+                    
+                    <div class="scoreboard-separator"></div>
+                    
+                    <div class="scoreboard-item danger">
+                        <div class="value text-status-danger">{{ threat_count }}</div>
+                        <div class="label">
+                            <i class="fas fa-exclamation-triangle text-xs"></i>
+                            <span>Threats Found</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="relative my-8">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-glass-border"></div>
+                </div>
+                <div class="relative flex justify-center">
+                    <span class="px-4 bg-glass-bg text-muted text-sm font-mono">
+                        <i class="fas fa-list mr-2"></i>Email Analysis
+                    </span>
+                </div>
+            </div>
+
+            <!-- Emails List -->
+            <div class="space-y-6">
+                {% for mail in emails %}
+                <div class="email-card p-5 rounded-xl border border-glass-border bg-gradient-to-br from-[#0f172a] to-[#1e293b] hover-lift">
+                    <!-- Email Header -->
+                    <div class="flex items-start justify-between mb-6 pb-4 border-b border-glass-border">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center shrink-0">
+                                <i class="fas fa-envelope text-white text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-white mb-1">Email {{ mail.email_index }}</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="badge-{{ mail.nlp_category|lower }}">
+                                        {{ mail.nlp_category }}
+                                    </span>
+                                    <span class="text-xs text-muted font-mono">
+                                        <i class="fas fa-hashtag mr-1"></i>{{ mail.urls|length }} URLs
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="toggleEmail({{ mail.email_index }})" 
+                                class="toggle-btn text-primary hover:text-accent-secondary text-sm font-medium flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 hover:border-primary/40 transition-all">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                            <span>Expand</span>
+                        </button>
+                    </div>
+
+                    <!-- Email Content -->
+                    <div class="mb-6">
+                        <div class="bg-glass-bg p-4 rounded-lg border border-glass-border">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-align-left text-primary"></i>
+                                    <span class="text-sm font-semibold text-white">Email Content</span>
+                                </div>
+                                <span class="text-xs text-muted font-mono">
+                                    {{ mail.content|length }} characters
+                                </span>
+                            </div>
+                            <div id="preview-{{ mail.email_index }}" class="email-preview">
+                                {{ mail.content|safe }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- URLs Section -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="setting-label">
+                                <i class="fas fa-link text-primary mr-2"></i>Detected URLs
+                                <span class="ml-2 px-2 py-0.5 bg-glass-bg rounded text-xs font-mono border border-glass-border">
+                                    {{ mail.urls|length }} found
+                                </span>
+                            </label>
+                            {% if mail.urls %}
+                            <span class="text-xs text-muted font-mono">
+                                Click URL to analyze
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if mail.urls %}
+                        <div class="space-y-3">
+                            {% for url, status in mail.urls.items() %}
+                            <div class="url-item group">
+                                <div class="flex items-center justify-between p-3 bg-glass-bg rounded-lg border border-glass-border hover:border-primary/30 transition-all">
+                                    <div class="flex-1 min-w-0">
+                                        <a href="{{ url }}" target="_blank" rel="noopener noreferrer" 
+                                           class="text-white hover:text-primary font-mono text-sm break-all transition-colors group-hover:underline">
+                                            <i class="fas fa-external-link-alt text-xs mr-2 opacity-50"></i>
+                                            {{ url|truncate(60) }}
+                                        </a>
+                                    </div>
+                                    <div class="ml-4 flex items-center gap-2 shrink-0">
+                                        <span class="status-badge status-{{ status|lower }}">
+                                            {{ status }}
+                                        </span>
+                                        <i class="fas fa-chevron-right text-xs text-muted group-hover:text-primary transition-colors"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="no-content-card">
+                            <div class="flex flex-col items-center justify-center py-8">
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-900/30 to-transparent flex items-center justify-center mb-3">
+                                    <i class="fas fa-check-circle text-status-success text-xl"></i>
+                                </div>
+                                <p class="text-muted text-center mb-2">No URLs detected in this email</p>
+                                <p class="text-xs text-muted text-center">This email appears to be safe with no embedded links</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Gemini NLP Analysis -->
+                    <div class="ai-analysis-card">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                <i class="fas fa-brain text-white text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-md font-bold text-white">AI Analysis (Gemini NLP)</h4>
+                                <p class="text-xs text-muted">Powered by Google Gemini AI</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="analysis-item">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <i class="fas fa-tag text-primary text-xs"></i>
+                                    <p class="text-sm text-muted uppercase tracking-wide font-semibold">Category</p>
+                                </div>
+                                <p class="text-white font-medium">{{ mail.nlp_category }}</p>
+                            </div>
+                            <div class="analysis-item">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <i class="fas fa-comment-dots text-primary text-xs"></i>
+                                    <p class="text-sm text-muted uppercase tracking-wide font-semibold">Assessment</p>
+                                </div>
+                                <p class="text-white">{{ mail.nlp_reason }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Form Section Styling */
+.form-section-header {
+    text-align: center;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-description {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+}
+
+.form-group {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.4), rgba(30, 41, 59, 0.4));
+    border: 1px solid rgba(3, 233, 244, 0.15);
+    border-radius: 12px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+.form-group:hover {
+    border-color: rgba(3, 233, 244, 0.3);
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6));
+}
+
+.form-input {
+    width: 100%;
+    padding: 1.25rem 1.5rem;
+    font-size: 1.1rem;
+    border: 2px solid rgba(3, 233, 244, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-white);
+    font-family: 'SF Mono', 'Roboto Mono', monospace;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.form-input:hover {
+    border-color: rgba(3, 233, 244, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(3, 233, 244, 0.3);
+}
+
+.form-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* Remove spinner from number input */
+.form-input::-webkit-outer-spin-button,
+.form-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.form-input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.form-submit-btn {
+    padding: 1.5rem 2.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-white);
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(3, 233, 244, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.form-submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(3, 233, 244, 0.4);
+}
+
+.form-submit-btn:active {
+    transform: translateY(-1px);
+}
+
+/* Neon Purple Button */
+.neon-button-purple {
+    padding: 1.5rem 2.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8));
+    border: 2px solid rgba(179, 0, 255, 0.5);
+    border-radius: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 24px rgba(179, 0, 255, 0.2), inset 0 0 20px rgba(179, 0, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.neon-button-purple:hover {
+    box-shadow: 0 12px 32px rgba(179, 0, 255, 0.4), inset 0 0 30px rgba(179, 0, 255, 0.2);
+    transform: translateY(-3px);
+    border-color: rgba(179, 0, 255, 0.8);
+    background: linear-gradient(135deg, rgba(15, 23, 42, 1), rgba(30, 41, 59, 1));
+}
+
+.neon-button-purple:active {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(179, 0, 255, 0.3), inset 0 0 20px rgba(179, 0, 255, 0.1);
+}
+
+.neon-button-purple span {
+    position: relative;
+    z-index: 2;
+}
+
+.neon-button-purple span:nth-child(1),
+.neon-button-purple span:nth-child(2),
+.neon-button-purple span:nth-child(3),
+.neon-button-purple span:nth-child(4) {
+    position: absolute;
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .form-section-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-section-header h2 {
+        font-size: 1.75rem;
+    }
+    
+    .form-label {
+        font-size: 1.1rem;
+    }
+    
+    .form-description {
+        font-size: 0.95rem;
+    }
+    
+    .form-group {
+        padding: 1.5rem;
+    }
+    
+    .form-input {
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+    }
+    
+    .form-submit-btn {
+        padding: 1.25rem 2rem;
+        font-size: 0.95rem;
+    }
+}
+
+/* Compact Scoreboard */
+.compact-scoreboard {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6));
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 2rem 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.scoreboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+}
+
+.scoreboard-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-white);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.scoreboard-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+    margin-bottom: 1.75rem;
+}
+
+.scoreboard-values {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+}
+
+.scoreboard-separator {
+    width: 1px;
+    height: 80px;
+    background: linear-gradient(180deg, transparent, rgba(3, 233, 244, 0.3), transparent);
+    margin: 0 2.5rem;
+}
+
+.scoreboard-item {
+    text-align: center;
+    padding: 1rem 1.5rem;
+    min-width: 140px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scoreboard-item:hover {
+    transform: translateY(-3px);
+}
+
+.scoreboard-item .value {
+    font-size: 2.8rem;
+    font-weight: 900;
+    font-family: 'SF Mono', 'Roboto Mono', monospace;
+    margin-bottom: 0.6rem;
+    letter-spacing: 1px;
+    line-height: 1.1;
+}
+
+.scoreboard-item .label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 700;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.scoreboard-item .label i {
+    opacity: 0.7;
+}
+
+.scoreboard-item.success .value {
+    color: var(--status-success);
+}
+
+.scoreboard-item.danger .value {
+    color: var(--status-danger);
+}
+
+@media (max-width: 1024px) {
+    .scoreboard-values {
+        gap: 1rem;
+        flex-direction: column;
+    }
+    
+    .scoreboard-separator {
+        display: none;
+    }
+    
+    .scoreboard-item {
+        min-width: 180px;
+        padding: 1.25rem 2rem;
+        border: 1px solid rgba(3, 233, 244, 0.1);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .scoreboard-item .value {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .compact-scoreboard {
+        padding: 1.5rem 1rem;
+    }
+    
+    .scoreboard-values {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .scoreboard-title {
+        font-size: 1rem;
+    }
+    
+    .scoreboard-item {
+        min-width: 100%;
+        padding: 1rem 1.5rem;
+        border: 1px solid rgba(3, 233, 244, 0.15);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .scoreboard-item .value {
+        font-size: 2.2rem;
+    }
+    
+    .scoreboard-item .label {
+        font-size: 0.75rem;
+    }
+}
+
+/* Email Preview Styling */
+.email-preview {
+    color: var(--text-main);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: hidden;
+    max-height: 120px;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'SF Mono', 'Roboto Mono', monospace;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.email-preview.expanded {
+    max-height: 500px !important;
+    overflow-y: auto;
+}
+
+/* Email Card */
+.email-card {
+    transition: all 0.3s ease;
+    animation: slideUp 0.5s ease-out;
+    position: relative;
+}
+
+.email-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+}
+
+.email-card.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-color: var(--accent-primary);
+}
+
+/* NLP Category Badges */
+.badge-marketing, .badge-legitimate, .badge-safe, .badge-phishing, .badge-malicious, .badge-suspicious {
+    background: linear-gradient(135deg, rgba(3, 233, 244, 0.15), rgba(3, 233, 244, 0.05));
+    color: var(--accent-primary);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(3, 233, 244, 0.2);
+    box-shadow: 0 2px 8px rgba(3, 233, 244, 0.1);
+}
+
+.badge-phishing, .badge-malicious {
+    background: linear-gradient(135deg, rgba(255, 49, 49, 0.15), rgba(255, 49, 49, 0.05));
+    color: var(--status-danger);
+    border: 1px solid rgba(255, 49, 49, 0.2);
+    box-shadow: 0 2px 8px rgba(255, 49, 49, 0.1);
+    animation: pulse 2s infinite;
+}
+
+.badge-suspicious {
+    background: linear-gradient(135deg, rgba(255, 184, 0, 0.15), rgba(255, 184, 0, 0.05));
+    color: var(--status-warning);
+    border: 1px solid rgba(255, 184, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(255, 184, 0, 0.1);
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    min-width: 100px;
+    text-align: center;
+}
+
+.status-malicious {
+    background: linear-gradient(135deg, rgba(255, 49, 49, 0.15), rgba(255, 49, 49, 0.05));
+    color: var(--status-danger);
+    border: 1px solid rgba(255, 49, 49, 0.2);
+    box-shadow: 0 2px 8px rgba(255, 49, 49, 0.1);
+}
+
+.status-suspicious {
+    background: linear-gradient(135deg, rgba(255, 184, 0, 0.15), rgba(255, 184, 0, 0.05));
+    color: var(--status-warning);
+    border: 1px solid rgba(255, 184, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(255, 184, 0, 0.1);
+}
+
+.status-safe {
+    background: linear-gradient(135deg, rgba(57, 255, 20, 0.15), rgba(57, 255, 20, 0.05));
+    color: var(--status-success);
+    border: 1px solid rgba(57, 255, 20, 0.2);
+    box-shadow: 0 2px 8px rgba(57, 255, 20, 0.1);
+}
+
+.status-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Stat Cards */
+.stat-card {
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    text-align: center;
+    position: relative;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8));
+}
+
+.stat-card.glow-on-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(3, 233, 244, 0.1);
+    border-color: var(--accent-primary);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #fff, #a5b4fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.stat-icon {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    opacity: 0.3;
+}
+
+/* Toggle Button */
+.toggle-btn {
+    background: rgba(3, 233, 244, 0.1);
+    border: 1px solid rgba(3, 233, 244, 0.2);
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background: rgba(3, 233, 244, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(3, 233, 244, 0.1);
+}
+
+/* URL Item */
+.url-item:hover .status-badge {
+    transform: scale(1.05);
+}
+
+/* AI Analysis Card */
+.ai-analysis-card {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 1.25rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+}
+
+.analysis-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* No Content Card */
+.no-content-card {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(34, 197, 94, 0.02));
+    border: 1px dashed rgba(34, 197, 94, 0.3);
+    border-radius: 10px;
+}
+
+/* Animations */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Scrollbar Styling */
+.email-preview::-webkit-scrollbar {
+    width: 6px;
+}
+
+.email-preview::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.email-preview::-webkit-scrollbar-thumb {
+    background: var(--accent-primary);
+    border-radius: 3px;
+}
+
+.email-preview::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .grid.grid-cols-1.md\\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .email-card {
+        padding: 1.25rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+    }
+    
+    .email-preview {
+        font-size: 0.8125rem;
+        max-height: 100px;
+    }
+    
+    .ai-analysis-card {
+        padding: 1rem;
+    }
+}
+</style>
+
+<script>
+// Initialize email preview heights with staggered animation
+document.addEventListener('DOMContentLoaded', function() {
+    const emailCards = document.querySelectorAll('.email-card');
+    
+    emailCards.forEach((card, index) => {
+        // Staggered animation delay
+        card.style.animationDelay = `${index * 0.1}s`;
+        
+        // Initialize preview height
+        const previewId = `preview-${index + 1}`;
+        const preview = document.getElementById(previewId);
+        const toggleBtn = card.querySelector('.toggle-btn');
+        
+        if (preview && toggleBtn) {
+            // Clean up the content
+            cleanEmailContent(preview);
+            
+            preview.style.maxHeight = '120px';
+            preview.style.overflow = 'hidden';
+            
+            // Only show toggle button if content is long
+            if (preview.textContent.length < 500) {
+                toggleBtn.style.display = 'none';
+            }
+        }
+    });
+    
+    // Add hover effect to stat cards
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-4px)';
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+        });
+    });
+});
+
+function toggleEmail(index) {
+    const preview = document.getElementById(`preview-${index}`);
+    const btn = document.querySelector(`#preview-${index}`).closest('.email-card').querySelector('.toggle-btn');
+    
+    if (!preview || !btn) return;
+    
+    const icon = btn.querySelector('i');
+    const textSpan = btn.querySelector('span');
+    
+    if (preview.classList.contains('expanded')) {
+        // Collapse
+        preview.classList.remove('expanded');
+        preview.style.maxHeight = '120px';
+        icon.className = 'fas fa-chevron-down text-xs';
+        textSpan.textContent = 'Expand';
+        btn.classList.remove('bg-primary/20');
+    } else {
+        // Expand
+        preview.classList.add('expanded');
+        preview.style.maxHeight = preview.scrollHeight + 'px';
+        icon.className = 'fas fa-chevron-up text-xs';
+        textSpan.textContent = 'Collapse';
+        btn.classList.add('bg-primary/20');
+    }
+}
+
+// Clean email content function
+function cleanEmailContent(element) {
+    if (!element) return;
+    
+    let content = element.textContent || element.innerText;
+    
+    // Replace HTML entities
+    content = content
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&#x27;/g, "'")
+        .replace(/&#x2F;/g, '/');
+    
+    // Replace special Unicode characters
+    content = content
+        .replace(/[^\x20-\x7E\n\r\t]/g, ' ')
+        .replace(/[ ͏]/g, ' ');
+    
+    // Clean up whitespace
+    content = content
+        .replace(/\s+/g, ' ')
+        .replace(/\n\s*\n/g, '\n\n')
+        .trim();
+    
+    // Limit consecutive line breaks
+    content = content.replace(/\n{3,}/g, '\n\n');
+    
+    // Update the element
+    element.textContent = content;
+}
+
+// Apply cleaning to all email previews on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.email-preview').forEach(preview => {
+        cleanEmailContent(preview);
+    });
+});
+
+// Toast notification function
+function showToast(message, type = "info") {
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-notification fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full`;
+    
+    const colors = {
+        success: 'bg-gradient-to-r from-green-500 to-emerald-600 border-l-4 border-l-status-success',
+        error: 'bg-gradient-to-r from-red-500 to-rose-600 border-l-4 border-l-status-danger',
+        warning: 'bg-gradient-to-r from-amber-500 to-orange-600 border-l-4 border-l-status-warning',
+        info: 'bg-gradient-to-r from-accent-primary to-accent-secondary border-l-4 border-l-accent-primary'
+    };
+
+    toast.className += ' ' + colors[type];
+    
+    toast.innerHTML = `
+        <div class="flex items-center gap-3">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                              type === 'error' ? 'exclamation-circle' : 
+                              type === 'warning' ? 'exclamation-triangle' : 
+                              'info-circle'}"></i>
+            <span class="font-medium">${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 10);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Add click effect to buttons
+document.querySelectorAll('button').forEach(button => {
+    button.addEventListener('click', function(e) {
+        // Create ripple effect
+        const ripple = document.createElement('span');
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        
+        ripple.style.cssText = `
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            width: ${size}px;
+            height: ${size}px;
+            top: ${y}px;
+            left: ${x}px;
+            pointer-events: none;
+        `;
+        
+        this.appendChild(ripple);
+        
+        setTimeout(() => {
+            ripple.remove();
+        }, 600);
+    });
+});
+
+// Add ripple animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes ripple {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Socket.IO: Listen for auto-scan events
+(function(){
+  try {
+    if (typeof io !== 'undefined') {
+      const socket = io({ transports: ['websocket', 'polling'] });
+      
+      socket.on('auto_scan_started', (data) => {
+        showNotification(`Auto-scan started: ${data.count} new emails found`, 'info');
+      });
+      
+      socket.on('email_auto_scanned', (data) => {
+        const tableBody = document.querySelector('table tbody');
+        if (tableBody) {
+          const row = document.createElement('tr');
+          row.classList.add('border-b', 'border-glass-border', 'hover:bg-glass-highlight');
+          row.innerHTML = `
+            <td class="p-3 text-sm font-mono">${new Date().toLocaleTimeString()}</td>
+            <td class="p-3 text-sm">${data.subject || 'No Subject'}</td>
+            <td class="p-3 text-sm">${data.from || 'Unknown'}</td>
+            <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${data.result.is_phishing ? 'bg-red-900/50 text-red-300' : 'bg-green-900/50 text-green-300'}">${data.result.is_phishing ? 'Threat' : 'Safe'}</span></td>
+            <td class="p-3 text-xs text-muted font-mono">Auto</td>
+          `;
+          tableBody.insertBefore(row, tableBody.firstChild);
+        }
+        showNotification(`Email analyzed: "${data.subject}"`, 'success');
+      });
+      
+      socket.on('auto_scan_completed', (data) => {
+        showNotification(`Auto-scan completed: ${data.processed} emails, ${data.threats_found} threats found`, 'success');
+      });
+      
+      socket.on('auto_scan_failed', (data) => {
+        showNotification(`Auto-scan failed: ${data.error}`, 'error');
+      });
+    }
+  } catch (e) { /* ignore */ }
+})();
+
+function showNotification(message, type = 'info') {
+  let bar = document.getElementById('email-scan-notification');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'email-scan-notification';
+    document.body.appendChild(bar);
+  }
+  bar.style.position = 'fixed';
+  bar.style.left = '50%';
+  bar.style.bottom = '24px';
+  bar.style.transform = 'translateX(-50%)';
+  bar.style.padding = '12px 16px';
+  bar.style.background = 'rgba(15, 12, 41, 0.9)';
+  bar.style.border = '1px solid var(--glass-border)';
+  bar.style.borderRadius = '10px';
+  bar.style.fontFamily = 'var(--font-mono)';
+  bar.style.fontSize = '0.9rem';
+  bar.style.zIndex = '1000';
+  bar.style.color = type === 'success' ? '#39FF14' : type === 'error' ? '#FF3131' : '#03e9f4';
+  bar.textContent = message;
+  bar.style.display = 'block';
+  setTimeout(() => { bar.style.display = 'none'; }, 3500);
+}
+</script>
+
+{% endblock %}
