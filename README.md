@@ -10,7 +10,7 @@
 ![AI](https://img.shields.io/badge/AI-Gemini%20API-9C27B0?style=for-the-badge&logo=google&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-**An enterprise-inspired threat detection system analyzing logs and emails to detect anomalies and classify threats using advanced AI, including phishing and QRishing detection.**
+**A threat detection system analyzing logs and emails to detect anomalies and classify threats using advanced AI, including phishing and QRishing detection.**
 
 [Features](#features) • [Quick Start](#quick-start) • [API Documentation](#core-endpoints) • [Architecture](#architecture) • [Testing](#testing)
 
