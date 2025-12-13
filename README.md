@@ -132,38 +132,130 @@ A comprehensive system designed to analyze logs and emails, detect anomalies, an
 
 ## 🏗️ System Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│              User Interface & Extensions                │
-│        (Dashboard, Browser Extension, APIs)             │
-└────────────────────┬────────────────────────────────────┘
-                     │
-┌────────────────────▼────────────────────────────────────┐
-│              Flask Web Server (Port 5000)               │
-│         (Routing, Session Management, WebSockets)       │
-└────────────────────┬────────────────────────────────────┘
-                     │
-        ┌────────────┼────────────┐
-        │            │            │
-   ┌────▼────┐  ┌────▼────┐  ┌───▼────┐
-   │   URL    │  │  Email  │  │   QR   │
-   │ Scanner  │  │ Scanner │  │ Scanner│
-   └────┬────┘  └────┬────┘  └───┬────┘
-        │            │            │
-   ┌────▼──────────────────────────▼─────┐
-   │    Threat Intelligence Pipeline     │
-   │  (VT, GSB, PhishTank, AbuseIPDB)    │
-   └────┬──────────────────────────────┬─┘
-        │                              │
-   ┌────▼──────────┐          ┌────────▼────┐
-   │ Gemini AI API │          │  SQLite DB  │
-   │ (Fusion Score)│          │ (Audit Log) │
-   └────┬──────────┘          └─────────────┘
-        │
-   ┌────▼────────────────────────────┐
-   │   Real-time Dashboard & Alerts  │
-   │    (SocketIO, CSV Export)       │
-   └─────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "User Interfaces"
+        Dashboard["🎨 Web Dashboard<br/>Port 5000"]
+        Extension["🔌 Browser Extension<br/>Chrome/Manifest V3"]
+        API["📡 REST API<br/>JSON Endpoints"]
+    end
+
+    subgraph "Flask Application Layer"
+        Router["Flask Router<br/>& Middleware"]
+        SocketIO["WebSocket Manager<br/>SocketIO"]
+        Auth["Authentication<br/>Session Handler"]
+    end
+
+    subgraph "Processing Engines"
+        URLScanner["🔗 URL Scanner<br/>threat_checker.py"]
+        EmailScanner["📧 Email Scanner<br/>email_scanner.py"]
+        QRScanner["🔲 QR Scanner<br/>QRishing Detection"]
+        SOCAnalyzer["📊 SOC Log Analyzer<br/>soc_analyzer.py"]
+    end
+
+    subgraph "Threat Intelligence Pipeline"
+        VT["VirusTotal API<br/>Malware & URLs"]
+        GSB["Google Safe<br/>Browsing API"]
+        PhishTank["PhishTank API<br/>Phishing DB"]
+        AbuseIPDB["AbuseIPDB API<br/>IP Reputation"]
+        RDAP["RDAP Whois<br/>Domain/IP Info"]
+    end
+
+    subgraph "AI & Analysis"
+        Gemini["🤖 Google Gemini API<br/>Fusion Scoring<br/>& AI Analysis"]
+        RiskScoring["Risk Calculation<br/>Engine"]
+    end
+
+    subgraph "Data & Persistence"
+        SQLiteDB["💾 SQLite Database<br/>Threat Logs & Alerts"]
+        URLCache["⚡ URL Cache<br/>Performance Layer"]
+        AlertQueue["📢 Alert Queue<br/>Email Dispatch"]
+    end
+
+    subgraph "External Services"
+        Gmail["Gmail API<br/>Email Retrieval"]
+        Brevo["Brevo Email<br/>Alert Service"]
+    end
+
+    subgraph "Outputs & Notifications"
+        Dashboard_Output["Real-time Alerts<br/>CSV Export"]
+        UserNotification["📧 Email Notifications<br/>to Users"]
+    end
+
+    %% User Interfaces to Flask
+    Dashboard -->|HTTP/WebSocket| Router
+    Extension -->|POST/HTTP| Router
+    API -->|HTTP Requests| Router
+
+    %% Flask Layer
+    Router -->|Route| SocketIO
+    Router -->|Verify| Auth
+    SocketIO -->|Live Updates| Dashboard
+
+    %% Routing to Engines
+    Router -->|URL Input| URLScanner
+    Router -->|Email Trigger| EmailScanner
+    Router -->|QR Image| QRScanner
+    Router -->|Log Data| SOCAnalyzer
+
+    %% Processing to Threat Intel
+    URLScanner -->|Check URL| VT
+    URLScanner -->|Check URL| GSB
+    URLScanner -->|Check URL| PhishTank
+    EmailScanner -->|Extract URLs| VT
+    EmailScanner -->|Extract URLs| GSB
+    QRScanner -->|Decode & Verify| VT
+    SOCAnalyzer -->|IP/Domain Lookup| AbuseIPDB
+    SOCAnalyzer -->|IP/Domain Lookup| RDAP
+
+    %% Threat Intel to AI
+    VT -->|Results| Gemini
+    GSB -->|Results| Gemini
+    PhishTank -->|Results| Gemini
+    AbuseIPDB -->|Results| Gemini
+    RDAP -->|Results| Gemini
+
+    %% AI to Scoring
+    Gemini -->|Analysis| RiskScoring
+    RiskScoring -->|Score| SQLiteDB
+
+    %% Caching
+    URLScanner -->|Cache Hit/Miss| URLCache
+    URLCache -->|Cached Data| Gemini
+
+    %% Database & Alerts
+    URLScanner -->|Log| SQLiteDB
+    EmailScanner -->|Log| SQLiteDB
+    QRScanner -->|Log| SQLiteDB
+    SOCAnalyzer -->|Log| SQLiteDB
+
+    %% External Services
+    EmailScanner -->|Fetch Emails| Gmail
+    AlertQueue -->|Send Alerts| Brevo
+
+    %% Output
+    SQLiteDB -->|Retrieve Logs| Dashboard_Output
+    AlertQueue -->|Trigger| UserNotification
+    RiskScoring -->|Update| Dashboard_Output
+
+    %% Styling
+    classDef userInterface fill:#4A90E2,stroke:#2E5C8A,color:#fff,stroke-width:2px
+    classDef flaskLayer fill:#FF6B6B,stroke:#CC5555,color:#fff,stroke-width:2px
+    classDef processing fill:#4ECDC4,stroke:#2BA39E,color:#fff,stroke-width:2px
+    classDef threatIntel fill:#FFE66D,stroke:#CCB954,color:#333,stroke-width:2px
+    classDef ai fill:#95E1D3,stroke:#6FB8A8,color:#333,stroke-width:2px
+    classDef storage fill:#F38181,stroke:#C26B6B,color:#fff,stroke-width:2px
+    classDef external fill:#AA96DA,stroke:#8770B8,color:#fff,stroke-width:2px
+    classDef output fill:#FCBAD3,stroke:#CA959B,color:#333,stroke-width:2px
+
+    class Dashboard,Extension,API userInterface
+    class Router,SocketIO,Auth flaskLayer
+    class URLScanner,EmailScanner,QRScanner,SOCAnalyzer processing
+    class VT,GSB,PhishTank,AbuseIPDB,RDAP threatIntel
+    class Gemini,RiskScoring ai
+    class SQLiteDB,URLCache,AlertQueue storage
+    class Gmail,Brevo external
+    class Dashboard_Output,UserNotification output
 ```
 
 See [System Architecture](docs/02-System-Architecture.md) for detailed flow diagrams.
