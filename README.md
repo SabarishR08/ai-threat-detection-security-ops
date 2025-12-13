@@ -404,17 +404,7 @@ See [Security Features](docs/04-Security-Features.md) for comprehensive security
 
 ---
 
-## 📊 Demo Scenario (10 minutes)
-
-1. **Dashboard Overview** — Show live threat statistics and recent detections
-2. **URL Scanning** — Submit a known phishing test URL and display threat verdict with AI reasoning
-3. **Email Analysis** — Trigger email scanning and show phishing classification results
-4. **QR Code Detection** — Upload a test QR code and display scan results
-5. **SOC Log Analysis** — Paste a log snippet with suspicious activities and display JSON summary
-
----
-
-## 🔄 Workflow Example
+##  Workflow Example
 
 ```
 User Input (URL/Email/QR)
