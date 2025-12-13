@@ -2,6 +2,7 @@
 
 <div align="center">
 
+![CI](https://github.com/SabarishR08/ai-threat-detection-security-ops/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.0+-000000?style=for-the-badge&logo=flask&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
@@ -9,7 +10,7 @@
 ![AI](https://img.shields.io/badge/AI-Gemini%20API-9C27B0?style=for-the-badge&logo=google&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-**An enterprise-grade threat detection system analyzing logs and emails to detect anomalies and classify threats using advanced AI, including phishing and QRishing detection.**
+**An enterprise-inspired threat detection system analyzing logs and emails to detect anomalies and classify threats using advanced AI, including phishing and QRishing detection.**
 
 [Features](#features) • [Quick Start](#quick-start) • [API Documentation](#core-endpoints) • [Architecture](#architecture) • [Testing](#testing)
 
@@ -301,6 +302,11 @@ pytest tests/debug/
 pytest --cov=backend --cov-report=html
 ```
 
+### Continuous Integration
+This project uses GitHub Actions to automatically run the full test suite on every push and pull request. See `.github/workflows/ci.yml` for the pipeline configuration.
+
+> **Note**: External API calls are mocked or rate-limited during testing to ensure reliability and reproducibility.
+
 See [Testing Guide](backend/tests/README.md) for detailed testing procedures.
 
 ---
@@ -465,6 +471,8 @@ This project is licensed under the MIT License — see [LICENSE](LICENSE) file f
 - Demonstrates full-stack development and security engineering
 - Integrates multiple third-party APIs and AI services
 - Production-ready architecture with testing and documentation
+
+> **Note**: External API calls are mocked or rate-limited during testing to ensure reliability and reproducibility.
 
 ---
 
