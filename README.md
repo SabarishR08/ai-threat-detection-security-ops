@@ -464,13 +464,12 @@ This project is licensed under the MIT License — see [LICENSE](LICENSE) file f
 
 ---
 
-## 👤 Author & Internship Project
+## 👤 Author
 
-**Submitted for Internship Review**
-- Developed as comprehensive security system project
-- Demonstrates full-stack development and security engineering
-- Integrates multiple third-party APIs and AI services
-- Production-ready architecture with testing and documentation
+**Sabarish R**
+
+📧 sabarish.edu2024@gmail.com  
+🔗 [LinkedIn Profile](https://www.linkedin.com/in/sabarishr08)
 
 > **Note**: External API calls are mocked or rate-limited during testing to ensure reliability and reproducibility.
 
@@ -485,7 +484,5 @@ For questions, issues, or feature requests, please open an issue on GitHub.
 <div align="center">
 
 **[⬆ back to top](#ai-threat-detection--security-operations)**
-
-Made with ❤️ for Security Operations
 
 </div>
