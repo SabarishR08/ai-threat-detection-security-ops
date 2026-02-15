@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Suspicious URL Detector",
+  "version": "1.0",
+  "description": "Detect suspicious URLs and send them for validation.",
+  
+  "permissions": [
+    "tabs",
+    "webNavigation",
+    "activeTab",
+    "scripting"
+  ],
+  
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "http://localhost:5000/*"
+  ],
+
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon48.png",
+    "default_title": "Suspicious URL Detector"
+  },
+
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
+

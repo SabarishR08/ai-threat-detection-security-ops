@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto fade-in">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">System Settings</h1>
+        <p class="text-muted font-mono mt-1">
+            Backend-enforced controls. All changes are audited.
+        </p>
+    </div>
+
+    <!-- Enforcement Notice -->
+    <div class="bg-gray-900 border border-gray-700 rounded-md p-4 mb-6 text-sm text-warning">
+        <strong>Note:</strong>
+        This interface reflects backend configuration only.
+        Secrets are never handled in the UI.
+        Changes are applied server-side and recorded in the audit log.
+    </div>
+
+    <!-- Settings Card -->
+    <div class="bg-gray-900 border border-gray-700 rounded-md p-6 relative">
+
+        <!-- Audit Log -->
+        <a href="/settings_audit"
+           class="absolute top-4 right-4 text-xs px-2 py-1 border border-gray-700 rounded text-gray-200">
+            Audit Log
+        </a>
+
+        <form id="settingsForm" class="space-y-6">
+
+            <!-- SYSTEM CONTROLS -->
+            <section>
+                <h2 class="text-lg font-bold mb-4">System Controls</h2>
+                <!-- Log Retention -->
+                <div class="setting">
+                    <label for="logRetention" class="font-mono">
+                        Log Retention Period
+                    </label>
+                    <select id="logRetention" class="input">
+                        <option value="7">7 days</option>
+                        <option value="30">30 days</option>
+                        <option value="90">90 days</option>
+                    </select>
+                    <p class="desc">How long logs are retained before cleanup.</p>
+                </div>
+            </section>
+
+            <!-- ALERT POLICY -->
+            <section>
+                <h2 class="text-lg font-bold mb-4">Alert Policy</h2>
+
+                <div class="setting">
+                    <label for="emailAlerts" class="font-mono">
+                        Email Alerts
+                    </label>
+                    <select id="emailAlerts" class="input">
+                        <option value="enabled">All alerts</option>
+                        <option value="critical">Critical only</option>
+                        <option value="disabled">Disabled</option>
+                    </select>
+                    <p class="desc">Policy for outbound alert notifications.</p>
+                </div>
+            </section>
+
+            <!-- INTEGRATIONS -->
+            <section>
+                <h2 class="text-lg font-bold mb-4">Integrations (Read-only)</h2>
+
+                <div class="setting">
+                    <div class="font-mono">VirusTotal</div>
+                    <p class="desc">
+                        Source: <span id="vtSourceText">env</span>
+                    </p>
+
+                    <div class="flex items-center gap-2 mt-2">
+                        <span id="vtDot" class="w-2.5 h-2.5 rounded-full bg-status-warning"></span>
+                        <span id="vtStatus" class="text-muted">Unknown</span>
+                    </div>
+
+                    <button type="button"
+                            id="testApiBtn"
+                            class="mt-3 px-3 py-1.5 border border-gray-700 rounded text-sm">
+                        Revalidate Server Key
+                    </button>
+                </div>
+            </section>
+
+            <!-- SAVE -->
+            <div class="pt-4">
+                <button type="submit"
+                        class="px-4 py-2 border border-gray-700 rounded">
+                    Save Settings
+                </button>
+            </div>
+
+            <div id="settingsMessage" class="text-sm mt-4"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+const form = document.getElementById('settingsForm');
+const msg  = document.getElementById('settingsMessage');
+
+function setMessage(text, type='') {
+    msg.textContent = text;
+    msg.className = type;
+}
+
+document.getElementById('testApiBtn').onclick = async () => {
+    setMessage('Validating VirusTotal key…');
+    const r = await fetch('/api/test_virustotal', { method: 'POST' });
+    const d = await r.json();
+
+    const dot = document.getElementById('vtDot');
+    const txt = document.getElementById('vtStatus');
+
+    if (d.success) {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-status-success';
+        txt.textContent = 'Configured';
+        setMessage('VirusTotal key validated.', 'success');
+    } else {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-status-danger';
+        txt.textContent = 'Not configured';
+        setMessage('VirusTotal not configured.', 'error');
+    }
+};
+
+form.onsubmit = async (e) => {
+    e.preventDefault();
+    setMessage('Saving settings…');
+
+    const payload = {
+        auto_scan: document.getElementById('autoScan').checked,
+        log_retention: document.getElementById('logRetention').value,
+        email_alerts: document.getElementById('emailAlerts').value
+    };
+
+    const r = await fetch('/api/update_settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    });
+
+    const d = await r.json();
+    setMessage(d.success ? 'Settings saved.' : 'Save failed.', d.success ? 'success' : 'error');
+};
+
+fetch('/api/get_settings')
+    .then(r => r.json())
+    .then(s => {
+        document.getElementById('autoScan').checked = !!s.auto_scan;
+        document.getElementById('logRetention').value = s.log_retention || '30';
+        document.getElementById('emailAlerts').value = s.email_alerts || 'enabled';
+
+        document.getElementById('vtSourceText').textContent = s.vt_source || 'env';
+        document.getElementById('vtStatus').textContent =
+            s.vt_configured ? 'Configured' : 'Not configured';
+        document.getElementById('vtDot').className =
+            'w-2.5 h-2.5 rounded-full ' +
+            (s.vt_configured ? 'bg-status-success' : 'bg-status-danger');
+    });
+</script>
+
+<style>
+.setting {
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+.input {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    margin-top: 6px;
+}
+.desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+</style>
+{% endblock %}

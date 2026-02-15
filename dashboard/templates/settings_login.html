@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Access - Authentication Required</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --glass-bg: rgba(15, 12, 41, 0.7);
+            --glass-border: rgba(3, 233, 244, 0.2);
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+            --accent-primary: #03e9f4;
+            --status-danger: #ff3131;
+            --status-success: #39ff14;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'Courier New', monospace;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-main);
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+        }
+
+        .login-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 0 40px rgba(3, 233, 244, 0.3);
+            padding: 40px;
+            width: 90%;
+            max-width: 450px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-icon {
+            font-size: 4rem;
+            color: var(--accent-primary);
+            text-shadow: 0 0 20px rgba(3, 233, 244, 0.6);
+            margin-bottom: 16px;
+        }
+
+        .login-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-label {
+            display: block;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(3, 233, 244, 0.3);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent-primary);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: var(--font-main);
+        }
+
+        .login-button:hover {
+            box-shadow: 0 0 25px rgba(3, 233, 244, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .login-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(255, 49, 49, 0.1);
+            border: 1px solid var(--status-danger);
+            border-radius: 8px;
+            color: var(--status-danger);
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .back-link a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .back-link a:hover {
+            color: var(--status-success);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1 class="login-title">Settings Access</h1>
+            <p class="login-subtitle">Authentication Required</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <label class="input-label" for="username">
+                    <i class="fas fa-user"></i> Username
+                </label>
+                <input type="text" id="username" class="input-field" placeholder="Enter username" autocomplete="username" required>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="password">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <input type="password" id="password" class="input-field" placeholder="Enter password" autocomplete="current-password" required>
+            </div>
+
+            <button type="submit" id="loginButton" class="login-button">
+                <i class="fas fa-sign-in-alt"></i> Authenticate
+            </button>
+
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+
+        <div class="back-link">
+            <a href="/dashboard">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const errorMessage = document.getElementById('errorMessage');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        loginForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!username || !password) {
+                showError('Please enter both username and password');
+                return;
+            }
+
+            loginButton.disabled = true;
+            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+            errorMessage.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/settings/authenticate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Redirect to settings page
+                    window.location.href = '/settings';
+                } else {
+                    showError(data.error || 'Invalid credentials');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+                console.error('Login error:', error);
+            } finally {
+                loginButton.disabled = false;
+                loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Authenticate';
+            }
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        // Focus username on load
+        window.addEventListener('DOMContentLoaded', () => {
+            usernameInput.focus();
+        });
+    </script>
+</body>
+</html>
