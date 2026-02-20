@@ -6,6 +6,7 @@ import os
 import logging
 import requests
 import threading
+from flask import current_app
 from dotenv import load_dotenv
 from backend.utils.settings_service import get_settings
 
@@ -20,8 +21,16 @@ def send_brevo_email_async(client_ip, url, status, severity):
     Send email alert in background thread (non-blocking)
     This prevents blocking the Flask request cycle
     """
+    # Get the app context from the current request
+    try:
+        app = current_app._get_current_object()
+    except RuntimeError:
+        logging.warning("No Flask app context available for async email")
+        return
+    
     def _send():
-        send_brevo_email(client_ip, url, status, severity)
+        with app.app_context():
+            send_brevo_email(client_ip, url, status, severity)
     
     threading.Thread(target=_send, daemon=True).start()
 

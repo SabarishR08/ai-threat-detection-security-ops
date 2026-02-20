@@ -9,106 +9,6 @@
         <p class="text-muted font-mono">Scan QR codes for phishing threats & generate security test QR codes</p>
     </div>
 
-
-        <!-- ======================================
-                RIGHT COLUMN: QR SCANNER
-        ======================================= -->
-        <div class="neon-box p-6">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-status-warning to-orange-500 flex items-center justify-center">
-                    <i class="fas fa-shield-alt text-white"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-white">QR Security Scanner</h3>
-                    <p class="text-muted text-sm">Upload QR images to detect phishing threats</p>
-                </div>
-            </div>
-
-            <form id="qrForm" enctype="multipart/form-data" class="space-y-4">
-                <div class="file-upload-container">
-                    <div class="file-upload-area" id="fileDropZone">
-                        <i class="fas fa-cloud-upload-alt text-3xl text-primary mb-3"></i>
-                        <p class="text-white mb-2">Drop QR image here or click to browse</p>
-                        <p class="text-muted text-sm">Supports PNG, JPG, JPEG (Max 5MB)</p>
-                        <label for="qr_image" class="sr-only">Upload QR image</label>
-                        <input type="file" class="file-input" id="qr_image" name="qr_image" 
-                               accept="image/*" required title="Upload QR image" aria-label="Upload QR image">
-                    </div>
-                    <div id="fileName" class="mt-2 text-sm text-muted"></div>
-                    <div id="filePreview" class="mt-4 hidden">
-                        <img id="previewImage" src="" alt="Preview" class="max-w-full h-48 object-contain rounded-lg border border-glass-border">
-                    </div>
-                </div>
-
-                <button type="submit" class="neon-button w-full accent-warning">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <i class="fas fa-search mr-2"></i> Scan for Threats
-                </button>
-            </form>
-
-            <!-- Scan Results -->
-            <div id="scanResult" class="mt-8 hidden">
-                <div class="border-t border-glass-border pt-6">
-                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <i class="fas fa-chart-bar text-primary"></i> Scan Results
-                    </h4>
-                    
-                    <!-- Threat Summary -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div class="stat-card bg-gradient-to-br from-[#0f172a] to-[#1e293b]">
-                            <div class="stat-value" id="totalUrls">0</div>
-                            <div class="stat-label">URLs Found</div>
-                        </div>
-                        <div class="stat-card bg-gradient-to-br from-[#0f172a] to-[#1e293b]">
-                            <div class="stat-value text-status-success" id="safeCount">0</div>
-                            <div class="stat-label">Safe URLs</div>
-                        </div>
-                        <div class="stat-card bg-gradient-to-br from-[#0f172a] to-[#1e293b]">
-                            <div class="stat-value text-status-danger" id="threatCount">0</div>
-                            <div class="stat-label">Threats Found</div>
-                        </div>
-                    </div>
-                    
-                    <!-- QR Content -->
-                    <div class="mb-6 p-4 bg-glass-bg rounded-lg border border-glass-border">
-                        <label class="setting-label mb-2">QR Code Content</label>
-                        <div class="bg-[#0f172a] p-3 rounded border border-glass-border">
-                            <code id="qrContent" class="text-white font-mono text-sm break-all"></code>
-                        </div>
-                    </div>
-                    
-                    <!-- Results Table -->
-                    <div class="overflow-x-auto">
-                        <table class="threat-table">
-                            <thead>
-                                <tr>
-                                    <th>URL</th>
-                                    <th>Status</th>
-                                    <th>Severity</th>
-                                </tr>
-                            </thead>
-                            <tbody id="resultsTable"></tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- Threat Alert Card -->
-                    <div id="qrAlertCard" class="mt-6 p-5 rounded-xl border-l-4 hidden">
-                        <div class="flex items-start gap-3">
-                            <div id="qrAlertIcon" class="text-2xl"></div>
-                            <div>
-                                <h5 id="qrAlertTitle" class="font-bold text-lg mb-1"></h5>
-                                <p id="qrAlertMessage" class="text-sm"></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
     <!-- Two Column Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- ======================================
@@ -117,7 +17,7 @@
         <div class="neon-box p-6">
             <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center">
-                    <i class="fas fa-qr-code text-white"></i>
+                    <i class="fas fa-qrcode text-white"></i>
                 </div>
                 <div>
                     <h3 class="text-xl font-bold text-white">QR Code Generator</h3>
@@ -125,7 +25,7 @@
                 </div>
             </div>
 
-            <div class="space-y-4">
+            <form id="qrGeneratorForm" class="space-y-4">
                 <!-- Payload Type Selector -->
                 <div>
                     <label for="payloadType" class="setting-label">
@@ -208,14 +108,14 @@
                     <textarea id="textContent" class="setting-input" placeholder="Plain text" rows="3"></textarea>
                 </div>
 
-                <button id="generateQRBtn" class="neon-button w-full">
+                <button type="button" id="generateQRBtn" class="neon-button w-full">
                     <span></span>
                     <span></span>
                     <span></span>
                     <span></span>
                     <i class="fas fa-bolt mr-2"></i> Generate QR Code
                 </button>
-            </div>
+            </form>
 
             <!-- QR Preview -->
             <div id="qrPreviewSection" class="mt-8 hidden">
@@ -227,14 +127,13 @@
                     <div class="flex flex-col md:flex-row items-center gap-6">
                         <div class="flex-shrink-0">
                             <div class="p-4 bg-gradient-to-br from-[#0f172a] to-[#1e293b] rounded-xl border border-glass-border">
-                                <img id="generatedQR" src="" alt="QR Code" 
-                                     class="w-48 h-48 mx-auto">
+                                <img id="generatedQR" src="" alt="QR Code" class="w-48 h-48 mx-auto">
                             </div>
                         </div>
                         
                         <div class="flex-1">
                             <div class="mb-4 p-4 bg-glass-bg rounded-lg border border-glass-border">
-                                <p class="text-muted text-sm mb-2">URL Preview:</p>
+                                <p class="text-muted text-sm mb-2">Payload Preview:</p>
                                 <p id="qrUrlPreview" class="text-white font-mono text-sm break-all"></p>
                             </div>
                             
@@ -245,15 +144,111 @@
                                 <button id="copyQRBtn" class="action-button btn-copy">
                                     <i class="fas fa-copy mr-2"></i> Copy Image
                                 </button>
-                                <button id="shareQRBtn" class="action-button btn-share">
-                                    <i class="fas fa-share-alt mr-2"></i> Share
-                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- ======================================
+                RIGHT COLUMN: QR SCANNER
+        ======================================= -->
+        <div class="neon-box p-6">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-status-warning to-orange-500 flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-white"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white">QR Security Scanner</h3>
+                    <p class="text-muted text-sm">Upload QR images to detect phishing threats</p>
+                </div>
+            </div>
+
+            <form id="qrForm" enctype="multipart/form-data" class="space-y-4">
+                <div class="file-upload-container">
+                    <div class="file-upload-area" id="fileDropZone">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-primary mb-3"></i>
+                        <p class="text-white mb-2">Drop QR image here or click to browse</p>
+                        <p class="text-muted text-sm">Supports PNG, JPG, JPEG (Max 5MB)</p>
+                        <input type="file" class="file-input" id="qr_image" name="qr_image" 
+                               accept="image/*" required>
+                    </div>
+                    <div id="fileName" class="mt-2 text-sm text-muted"></div>
+                    <div id="filePreview" class="mt-4 hidden">
+                        <img id="previewImage" src="" alt="Preview" class="max-w-full h-48 object-contain rounded-lg border border-glass-border">
+                    </div>
+                </div>
+
+                <button type="submit" class="neon-button w-full accent-warning">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <i class="fas fa-search mr-2"></i> Scan for Threats
+                </button>
+            </form>
+
+            <!-- Scan Results -->
+            <div id="scanResult" class="mt-8 hidden">
+                <div class="border-t border-glass-border pt-6">
+                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-bar text-primary"></i> Scan Results
+                    </h4>
+                    
+                    <!-- Threat Summary -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="stat-card bg-gradient-to-br from-[#0f172a] to-[#1e293b]">
+                            <div class="stat-value" id="totalUrls">0</div>
+                            <div class="stat-label">URLs Found</div>
+                        </div>
+                        <div class="stat-card bg-gradient-to-br from-[#0f172a] to-[#1e293b]">
+                            <div class="stat-value text-status-success" id="safeCount">0</div>
+                            <div class="stat-label">Safe URLs</div>
+                        </div>
+                        <div class="stat-card bg-gradient-to-br from-[#0f172a] to-[#1e293b]">
+                            <div class="stat-value text-status-danger" id="threatCount">0</div>
+                            <div class="stat-label">Threats Found</div>
+                        </div>
+                    </div>
+                    
+                    <!-- QR Content -->
+                    <div class="mb-6 p-4 bg-glass-bg rounded-lg border border-glass-border">
+                        <label class="setting-label mb-2">QR Code Content</label>
+                        <div class="bg-[#0f172a] p-3 rounded border border-glass-border">
+                            <code id="qrContent" class="text-white font-mono text-sm break-all"></code>
+                        </div>
+                    </div>
+                    
+                    <!-- Results Table -->
+                    <div class="overflow-x-auto">
+                        <table class="threat-table">
+                            <thead>
+                                <tr>
+                                    <th>URL</th>
+                                    <th>Status</th>
+                                    <th>Severity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTable"></tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Threat Alert Card -->
+                    <div id="qrAlertCard" class="mt-6 p-5 rounded-xl border-l-4 hidden">
+                        <div class="flex items-start gap-3">
+                            <div id="qrAlertIcon" class="text-2xl"></div>
+                            <div>
+                                <h5 id="qrAlertTitle" class="font-bold text-lg mb-1"></h5>
+                                <p id="qrAlertMessage" class="text-sm"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
 /* File Upload Styling */
@@ -322,7 +317,6 @@
     border: none;
     color: white;
     font-weight: 600;
-    font-family: var(--font-main);
     cursor: pointer;
     transition: all 0.3s ease;
     display: inline-flex;
@@ -335,21 +329,21 @@
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Custom button color variants for QR actions */
 .btn-download {
     background: linear-gradient(90deg, #0ea5e9 0%, #6366f1 100%);
 }
-.btn-download:hover { box-shadow: 0 8px 24px rgba(99,102,241,0.25); transform: translateY(-3px); }
+.btn-download:hover { 
+    box-shadow: 0 8px 24px rgba(99,102,241,0.25); 
+    transform: translateY(-3px); 
+}
 
 .btn-copy {
     background: linear-gradient(90deg, #7c3aed 0%, #ec4899 100%);
 }
-.btn-copy:hover { box-shadow: 0 8px 24px rgba(236,72,153,0.22); transform: translateY(-3px); }
-
-.btn-share {
-    background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
+.btn-copy:hover { 
+    box-shadow: 0 8px 24px rgba(236,72,153,0.22); 
+    transform: translateY(-3px); 
 }
-.btn-share:hover { box-shadow: 0 8px 24px rgba(251,146,60,0.22); transform: translateY(-3px); }
 
 /* Threat Table */
 .threat-table {
@@ -370,7 +364,6 @@
     font-weight: 600;
     color: var(--text-main);
     border-bottom: 1px solid var(--glass-border);
-    font-family: var(--font-mono);
 }
 
 .threat-table td {
@@ -414,664 +407,381 @@
     border: 1px solid var(--status-success);
 }
 
-/* File Preview */
-#filePreview {
-    animation: fadeIn 0.3s ease-out;
-}
-
-#previewImage {
-    max-height: 200px;
-    margin: 0 auto;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .grid.grid-cols-1.lg\\:grid-cols-2 {
-        grid-template-columns: 1fr;
-    }
-    
-    .neon-box {
-        padding: 1.5rem;
-    }
-    
-    .stat-card {
-        padding: 1rem;
-    }
-    
-    .stat-value {
-        font-size: 1.5rem;
-    }
-    
-    .file-upload-area {
-        padding: 1.5rem;
-    }
-}
-
 /* Utility helpers */
 .hidden { display: none !important; }
-.sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
 .accent-warning { --accent-primary: var(--status-warning); }
 </style>
 
 <script>
-// Ensure script runs after DOM is loaded to avoid null element lookups
 document.addEventListener('DOMContentLoaded', function() {
-/* =====================================================
-      Fixed Drag & Drop Implementation
-===================================================== */
-const fileDropZone = document.getElementById('fileDropZone');
-const fileInput = document.getElementById('qr_image');
-const fileName = document.getElementById('fileName');
-const filePreview = document.getElementById('filePreview');
-const previewImage = document.getElementById('previewImage');
-
-// Prevent default drag behaviors
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    fileDropZone.addEventListener(eventName, preventDefaults, false);
-    document.body.addEventListener(eventName, preventDefaults, false);
-});
-
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
-
-// Highlight drop zone on drag
-['dragenter', 'dragover'].forEach(eventName => {
-    fileDropZone.addEventListener(eventName, highlight, false);
-});
-
-['dragleave', 'drop'].forEach(eventName => {
-    fileDropZone.addEventListener(eventName, unhighlight, false);
-});
-
-function highlight() {
-    fileDropZone.classList.add('dragover');
-}
-
-function unhighlight() {
-    fileDropZone.classList.remove('dragover');
-}
-
-// Handle file drop
-fileDropZone.addEventListener('drop', handleDrop, false);
-
-function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const files = dt.files;
+    console.log('QR Detector page loaded');
     
-    if (files.length) {
-        handleFiles(files);
-    }
-}
-
-// Handle file selection via click
-fileInput.addEventListener('change', function(e) {
-    if (e.target.files.length) {
-        handleFiles(e.target.files);
-    }
-});
-
-function handleFiles(files) {
-    const file = files[0];
-    
-    // Validate file type
-    if (!file.type.match('image.*')) {
-        showToast("Please select an image file (PNG, JPG, JPEG)", "error");
-        return;
-    }
-    
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-        showToast("File size should be less than 5MB", "error");
-        return;
-    }
-    
-    // Update file input
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    fileInput.files = dataTransfer.files;
-    
-    // Update file name
-    fileName.textContent = `Selected: ${file.name} (${formatFileSize(file.size)})`;
-    fileName.className = 'mt-2 text-sm text-status-success';
-    
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        previewImage.src = e.target.result;
-        filePreview.style.display = 'block';
+    // ===== PAYLOAD TYPE SELECTOR =====
+    const payloadTypeSelect = document.getElementById('payloadType');
+    const fieldSets = {
+        url: document.getElementById('urlFields'),
+        wifi: document.getElementById('wifiFields'),
+        sms: document.getElementById('smsFields'),
+        tel: document.getElementById('telFields'),
+        email: document.getElementById('emailFields'),
+        upi: document.getElementById('upiFields'),
+        text: document.getElementById('textFields')
     };
-    reader.readAsDataURL(file);
     
-    showToast("QR image loaded successfully!", "success");
-}
+    payloadTypeSelect.addEventListener('change', function() {
+        Object.values(fieldSets).forEach(field => field.classList.add('hidden'));
+        const selected = fieldSets[this.value];
+        if (selected) selected.classList.remove('hidden');
+    });
 
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-/* =====================================================
-      QR Generation - Multi-Payload Support
-===================================================== */
-
-// Handle payload type selector
-document.getElementById("payloadType").addEventListener("change", function() {
-    const type = this.value;
-    
-    // Hide all field containers
-    document.getElementById("urlFields").style.display = "none";
-    document.getElementById("wifiFields").style.display = "none";
-    document.getElementById("smsFields").style.display = "none";
-    document.getElementById("telFields").style.display = "none";
-    document.getElementById("emailFields").style.display = "none";
-    document.getElementById("upiFields").style.display = "none";
-    document.getElementById("textFields").style.display = "none";
-    
-    // Show selected type fields
-    switch(type) {
-        case "url":
-            document.getElementById("urlFields").style.display = "block";
-            break;
-        case "wifi":
-            document.getElementById("wifiFields").style.display = "block";
-            break;
-        case "sms":
-            document.getElementById("smsFields").style.display = "block";
-            break;
-        case "tel":
-            document.getElementById("telFields").style.display = "block";
-            break;
-        case "email":
-            document.getElementById("emailFields").style.display = "block";
-            break;
-        case "upi":
-            document.getElementById("upiFields").style.display = "block";
-            break;
-        case "text":
-            document.getElementById("textFields").style.display = "block";
-            break;
-    }
-});
-
-// Generate QR Button Handler
-document.getElementById("generateQRBtn").addEventListener("click", async function() {
-    const payloadType = document.getElementById("payloadType").value;
-    const btn = this;
-    const originalText = btn.innerHTML;
-    
-    // Collect payload data based on type
-    let payload = {};
-    payload.type = payloadType;
-    
-    switch(payloadType) {
-        case "url":
-            const url = document.getElementById("qrGenUrl").value.trim();
-            if (!url) {
-                showToast("Please enter a URL", "warning");
-                return;
-            }
-            try {
-                new URL(url);
-            } catch {
-                showToast("Please enter a valid URL (include http:// or https://)", "warning");
-                return;
-            }
-            payload.url = url;
-            break;
-            
-        case "wifi":
-            const ssid = document.getElementById("wifiSSID").value.trim();
-            if (!ssid) {
-                showToast("WiFi SSID is required", "warning");
-                return;
-            }
-            payload.ssid = ssid;
-            payload.security = document.getElementById("wifiSecurity").value;
-            payload.password = document.getElementById("wifiPassword").value.trim();
-            break;
-            
-        case "sms":
-            const smsPhone = document.getElementById("smsPhone").value.trim();
-            if (!smsPhone) {
-                showToast("Phone number is required", "warning");
-                return;
-            }
-            payload.phone = smsPhone;
-            payload.message = document.getElementById("smsMessage").value.trim();
-            break;
-            
-        case "tel":
-            const telPhone = document.getElementById("telPhone").value.trim();
-            if (!telPhone) {
-                showToast("Phone number is required", "warning");
-                return;
-            }
-            payload.phone = telPhone;
-            break;
-            
-        case "email":
-            const email = document.getElementById("emailAddr").value.trim();
-            if (!email) {
-                showToast("Email address is required", "warning");
-                return;
-            }
-            payload.email = email;
-            payload.subject = document.getElementById("emailSubject").value.trim();
-            payload.body = document.getElementById("emailBody").value.trim();
-            break;
-            
-        case "upi":
-            const upiId = document.getElementById("upiId").value.trim();
-            if (!upiId) {
-                showToast("UPI ID is required", "warning");
-                return;
-            }
-            payload.upi_id = upiId;
-            payload.amount = document.getElementById("upiAmount").value.trim();
-            payload.description = document.getElementById("upiDesc").value.trim();
-            break;
-            
-        case "text":
-            const text = document.getElementById("textContent").value.trim();
-            if (!text) {
-                showToast("Text content is required", "warning");
-                return;
-            }
-            payload.text = text;
-            break;
-    }
-    
-    // Show loading state
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
-    btn.disabled = true;
-    
-    try {
-        // Send to backend API
-        const response = await fetch("/api/generate-qr", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const contentType = response.headers.get('content-type') || '';
-
-        if (response.ok) {
-            // If backend returns an image (PNG), convert blob -> data URL and display
-            if (contentType.startsWith('image/')) {
-                const blob = await response.blob();
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById("qrPreviewSection").style.display = "block";
-                    document.getElementById("generatedQR").src = e.target.result;
-                    document.getElementById("qrUrlPreview").textContent = payload.url || "QR Code generated successfully";
-                    showToast("QR code generated successfully!", "success");
-                };
-                reader.readAsDataURL(blob);
-            } else {
-                // Expect JSON with base64-encoded PNG
-                let data = {};
-                try { data = await response.json(); } catch (err) { /* ignore */ }
-                if (data.qr_code) {
-                    document.getElementById("qrPreviewSection").style.display = "block";
-                    document.getElementById("generatedQR").src = "data:image/png;base64," + data.qr_code;
-                    document.getElementById("qrUrlPreview").textContent = data.payload || payload.url || "QR Code generated successfully";
-                    showToast("QR code generated successfully!", "success");
-                } else {
-                    showToast(data.error || "Failed to generate QR code", "error");
-                }
-            }
-        } else {
-            // Non-OK response; try to surface JSON error
-            let data = {};
-            try { data = await response.json(); } catch (err) { /* ignore */ }
-            showToast(data.error || "Failed to generate QR code", "error");
-        }
-    } catch (err) {
-        console.error("QR generation error:", err);
-        showToast("Error generating QR code", "error");
-    } finally {
-        // Reset button
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
-});
-
-/* =====================================================
-      Download/Copy/Share QR Code
-===================================================== */
-document.getElementById("downloadQRBtn").addEventListener("click", function() {
-    const qrImg = document.getElementById("generatedQR");
-    
-    if (!qrImg.src) {
-        showToast("No QR code to download", "warning");
-        return;
-    }
-    
-    // Create temporary link
-    const link = document.createElement('a');
-    link.href = qrImg.src;
-    link.download = `qr-code-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    showToast("QR code downloaded!", "success");
-});
-
-document.getElementById("copyQRBtn").addEventListener("click", async function() {
-    const qrImg = document.getElementById("generatedQR");
-    
-    if (!qrImg.src) {
-        showToast("No QR code to copy", "warning");
-        return;
-    }
-    
-    try {
-        // For cross-origin images, we need to fetch them first
-        const response = await fetch(qrImg.src, { mode: 'cors' });
-        const blob = await response.blob();
+    // ===== QR GENERATION =====
+    const generateBtn = document.getElementById('generateQRBtn');
+    generateBtn.addEventListener('click', async function() {
+        const payloadType = payloadTypeSelect.value;
+        let payload = { type: payloadType };
         
-        // Copy to clipboard
-        await navigator.clipboard.write([
-            new ClipboardItem({
-                [blob.type]: blob
-            })
-        ]);
-        
-        showToast("QR code copied to clipboard!", "success");
-    } catch (err) {
-        console.error('Copy failed:', err);
-        // Fallback: copy image URL
+        // Collect data based on type
         try {
-            await navigator.clipboard.writeText(qrImg.src);
-            showToast("QR code URL copied to clipboard!", "success");
-        } catch (err2) {
-            showToast("Failed to copy QR code", "error");
+            switch(payloadType) {
+                case 'url':
+                    const url = document.getElementById('qrGenUrl').value.trim();
+                    if (!url) {
+                        showToast('Please enter a URL', 'warning');
+                        return;
+                    }
+                    new URL(url); // Validate URL
+                    payload.url = url;
+                    break;
+                    
+                case 'wifi':
+                    const ssid = document.getElementById('wifiSSID').value.trim();
+                    if (!ssid) {
+                        showToast('WiFi SSID is required', 'warning');
+                        return;
+                    }
+                    payload.ssid = ssid;
+                    payload.security = document.getElementById('wifiSecurity').value;
+                    payload.password = document.getElementById('wifiPassword').value.trim();
+                    break;
+                    
+                case 'sms':
+                    const smsPhone = document.getElementById('smsPhone').value.trim();
+                    if (!smsPhone) {
+                        showToast('Phone number is required', 'warning');
+                        return;
+                    }
+                    payload.phone = smsPhone;
+                    payload.message = document.getElementById('smsMessage').value.trim();
+                    break;
+                    
+                case 'tel':
+                    const telPhone = document.getElementById('telPhone').value.trim();
+                    if (!telPhone) {
+                        showToast('Phone number is required', 'warning');
+                        return;
+                    }
+                    payload.phone = telPhone;
+                    break;
+                    
+                case 'email':
+                    const email = document.getElementById('emailAddr').value.trim();
+                    if (!email) {
+                        showToast('Email address is required', 'warning');
+                        return;
+                    }
+                    payload.email = email;
+                    payload.subject = document.getElementById('emailSubject').value.trim();
+                    payload.body = document.getElementById('emailBody').value.trim();
+                    break;
+                    
+                case 'upi':
+                    const upiId = document.getElementById('upiId').value.trim();
+                    if (!upiId) {
+                        showToast('UPI ID is required', 'warning');
+                        return;
+                    }
+                    payload.upi_id = upiId;
+                    payload.amount = document.getElementById('upiAmount').value.trim();
+                    payload.description = document.getElementById('upiDesc').value.trim();
+                    break;
+                    
+                case 'text':
+                    const text = document.getElementById('textContent').value.trim();
+                    if (!text) {
+                        showToast('Text content is required', 'warning');
+                        return;
+                    }
+                    payload.text = text;
+                    break;
+            }
+        } catch (e) {
+            showToast('Please enter a valid URL (include http:// or https://)', 'warning');
+            return;
         }
-    }
-});
-
-document.getElementById("shareQRBtn").addEventListener("click", async function() {
-    const qrImg = document.getElementById("generatedQR");
-    const url = document.getElementById("qrGenUrl").value.trim();
-    
-    if (!qrImg.src) {
-        showToast("No QR code to share", "warning");
-        return;
-    }
-    
-    if (navigator.share) {
+        
+        // Show loading
+        const originalText = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+        this.disabled = true;
+        
         try {
-            await navigator.share({
-                title: 'Security QR Code',
-                text: `QR Code for: ${url}`,
-                url: qrImg.src
+            const response = await fetch('/api/generate-qr', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
-        } catch (err) {
-            if (err.name !== 'AbortError') {
-                console.log('Share cancelled or failed:', err);
-            }
-        }
-    } else {
-        // Fallback: copy URL to clipboard
-        try {
-            await navigator.clipboard.writeText(url);
-            showToast("URL copied to clipboard for sharing", "success");
-        } catch (err) {
-            showToast("Failed to copy URL", "error");
-        }
-    }
-});
-
-/* =====================================================
-      QR SCANNING (Original functionality preserved)
-===================================================== */
-document.getElementById("qrForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-
-    const fileInput = document.getElementById("qr_image");
-    if (!fileInput.files.length) {
-        showToast("Please select a QR image.", "warning");
-        return;
-    }
-
-    // Show loading state
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Scanning...';
-    submitBtn.disabled = true;
-
-    const formData = new FormData();
-    formData.append("qr_image", fileInput.files[0]);
-
-    try {
-        const response = await fetch("/api/scan-qr", {
-            method: "POST",
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            document.getElementById("scanResult").style.display = "block";
-            document.getElementById("qrContent").innerText = data.qr_content || "N/A";
-
-            const tbody = document.getElementById("resultsTable");
-            tbody.innerHTML = "";
-
-            const analysis = data.analysis || {};
-            let riskLevel = (analysis.risk_level || "low").toLowerCase();
-            let riskSeverity = analysis.severity || (riskLevel === "high" ? "High" : riskLevel === "medium" ? "Medium" : "Low");
-            let riskStatus = analysis.status || (riskLevel === "high" ? "Malicious" : riskLevel === "medium" ? "Suspicious" : "Safe");
-
-            let totalUrls = 0;
-            let safeCount = 0;
-            let threatCount = 0;
-            let anyMalicious = false;
-
-            if (data.urls_found && data.urls_found.length) {
-                totalUrls = data.urls_found.length;
-                
-                data.urls_found.forEach(url => {
-                    const status = data.results[url] || "Unknown";
-                    const statusNorm = (status || '').toLowerCase();
-
-                    // Determine severity: treat phishing as high
-                    let severity = 'Low';
-                    if (statusNorm.includes('malicious') || statusNorm.includes('phish')) {
-                        severity = 'High';
-                    } else if (statusNorm.includes('suspicious') || statusNorm.includes('suspicious')) {
-                        severity = 'Medium';
-                    }
-
-                    // Update counters and overall risk
-                    if (statusNorm.includes('malicious') || statusNorm.includes('phish')) {
-                        threatCount++;
-                        anyMalicious = true;
-                        riskLevel = 'high';
-                        riskSeverity = 'High';
-                        riskStatus = status;
-                    } else if (statusNorm.includes('safe')) {
-                        safeCount++;
-                    }
-
-                    // Choose badge class based on normalized status
-                    const badgeClass = statusNorm.includes('malicious') || statusNorm.includes('phish') ? 'status-malicious' :
-                                       statusNorm.includes('suspicious') ? 'status-suspicious' :
-                                       'status-safe';
-
-                    const severityClass = severity === 'High' ? 'text-status-danger' :
-                                          severity === 'Medium' ? 'text-status-warning' :
-                                          'text-status-success';
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="font-mono text-sm">
-                            <a href="${url}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline break-all">
-                                ${url}
-                            </a>
-                        </td>
-                        <td>
-                            <span class="status-badge ${badgeClass}">
-                                ${status}
-                            </span>
-                        </td>
-                        <td class="font-bold ${severityClass}">
-                            ${severity}
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.qr_code) {
+                document.getElementById('qrPreviewSection').classList.remove('hidden');
+                document.getElementById('generatedQR').src = 'data:image/png;base64,' + data.qr_code;
+                document.getElementById('qrUrlPreview').textContent = data.payload || 'QR Code generated';
+                showToast('QR code generated successfully!', 'success');
             } else {
-                const label = analysis.type ? analysis.type.toUpperCase() : "PAYLOAD";
-                tbody.innerHTML = `
-                    <tr>
-                        <td class="font-mono text-sm break-all">${label}</td>
-                        <td>
-                            <span class="status-badge ${riskStatus === 'Malicious' ? 'status-malicious' :
-                                                   riskStatus === 'Suspicious' ? 'status-suspicious' :
-                                                   'status-safe'}">
-                                ${riskStatus}
-                            </span>
-                        </td>
-                        <td class="font-bold ${riskSeverity === 'High' ? 'text-status-danger' :
-                                           riskSeverity === 'Medium' ? 'text-status-warning' :
-                                           'text-status-success'}">
-                            ${riskSeverity}
-                        </td>
-                    </tr>`;
-
-                if (riskLevel === "high" || riskLevel === "medium") {
-                    threatCount = 1;
-                    anyMalicious = riskLevel === "high";
-                } else {
-                    safeCount = 1;
-                }
+                showToast(data.error || 'Failed to generate QR code', 'error');
             }
+        } catch (err) {
+            console.error('QR generation error:', err);
+            showToast('Error generating QR code: ' + err.message, 'error');
+        } finally {
+            this.innerHTML = originalText;
+            this.disabled = false;
+        }
+    });
+    
+    // ===== DOWNLOAD QR =====
+    document.getElementById('downloadQRBtn').addEventListener('click', function() {
+        const qrImg = document.getElementById('generatedQR');
+        if (!qrImg.src) {
+            showToast('No QR code to download', 'warning');
+            return;
+        }
+        const link = document.createElement('a');
+        link.href = qrImg.src;
+        link.download = `qr-code-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('QR code downloaded!', 'success');
+    });
+    
+    // ===== COPY QR =====
+    document.getElementById('copyQRBtn').addEventListener('click', async function() {
+        const qrImg = document.getElementById('generatedQR');
+        if (!qrImg.src) {
+            showToast('No QR code to copy', 'warning');
+            return;
+        }
+        try {
+            const response = await fetch(qrImg.src);
+            const blob = await response.blob();
+            if (navigator.clipboard && ClipboardItem) {
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                showToast('QR code copied to clipboard!', 'success');
+            } else {
+                showToast('Clipboard not supported', 'warning');
+            }
+        } catch (err) {
+            console.error('Copy failed:', err);
+            showToast('Failed to copy QR code', 'error');
+        }
+    });
 
-            // Update stats
-            document.getElementById("totalUrls").textContent = totalUrls;
-            document.getElementById("safeCount").textContent = safeCount;
-            document.getElementById("threatCount").textContent = threatCount;
+    // ===== FILE DROP ZONE =====
+    const fileDropZone = document.getElementById('fileDropZone');
+    const fileInput = document.getElementById('qr_image');
+    const fileName = document.getElementById('fileName');
+    const filePreview = document.getElementById('filePreview');
+    const previewImage = document.getElementById('previewImage');
 
-            // Show alert card (handles both URL and non-URL risks)
-            showQRAlertCard(riskLevel, analysis.details || "");
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        fileDropZone.addEventListener(eventName, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
 
-        } else {
-            showToast(data.error || "Failed to scan QR.", "error");
+    ['dragenter', 'dragover'].forEach(eventName => {
+        fileDropZone.addEventListener(eventName, () => fileDropZone.classList.add('dragover'));
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        fileDropZone.addEventListener(eventName, () => fileDropZone.classList.remove('dragover'));
+    });
+
+    fileDropZone.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (files.length) handleFiles(files);
+    });
+
+    fileInput.addEventListener('change', e => {
+        if (e.target.files.length) handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+        const file = files[0];
+        if (!file.type.match('image.*')) {
+            showToast('Please select an image file', 'error');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('File size should be less than 5MB', 'error');
+            return;
+        }
+        
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        
+        fileName.textContent = `Selected: ${file.name}`;
+        fileName.className = 'mt-2 text-sm text-status-success';
+        
+        const reader = new FileReader();
+        reader.onload = e => {
+            previewImage.src = e.target.result;
+            filePreview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+        
+        showToast('QR image loaded successfully!', 'success');
+    }
+
+    // ===== QR SCANNING =====
+    document.getElementById('qrForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('qr_image');
+        if (!fileInput.files.length) {
+            showToast('Please select a QR image', 'warning');
+            return;
         }
 
-    } catch (err) {
-        console.error(err);
-        showToast("Error scanning QR code", "error");
-    } finally {
-        // Reset button
-        submitBtn.innerHTML = originalBtnText;
-        submitBtn.disabled = false;
-    }
-});
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Scanning...';
+        submitBtn.disabled = true;
 
-/* =====================================================
-      Show QR Alert Card
-===================================================== */
-function showQRAlertCard(riskLevel, details) {
-    const card = document.getElementById("qrAlertCard");
-    const icon = document.getElementById("qrAlertIcon");
-    const title = document.getElementById("qrAlertTitle");
-    const message = document.getElementById("qrAlertMessage");
+        const formData = new FormData();
+        formData.append('qr_image', fileInput.files[0]);
 
-    const risk = (riskLevel || "low").toLowerCase();
-    const detailText = details || "";
+        try {
+            const response = await fetch('/api/scan-qr', {
+                method: 'POST',
+                body: formData
+            });
 
-    if (risk === "high") {
-        card.className = "mt-6 p-5 rounded-xl border-l-4 border-l-status-danger bg-gradient-to-r from-red-900/20 to-transparent";
-        icon.innerHTML = '<i class="fas fa-exclamation-triangle text-status-danger"></i>';
-        title.textContent = "⚠️ High Threat Detected";
-        title.className = "font-bold text-lg mb-1 text-status-danger";
-        message.textContent = detailText || "This QR code contains malicious content. Do NOT trust it.";
-        message.className = "text-sm text-white";
-    } else if (risk === "medium" || risk === "needs_scan") {
-        card.className = "mt-6 p-5 rounded-xl border-l-4 border-l-status-warning bg-gradient-to-r from-amber-900/20 to-transparent";
-        icon.innerHTML = '<i class="fas fa-shield-alt text-status-warning"></i>';
-        title.textContent = "⚠️ Suspicious QR Detected";
-        title.className = "font-bold text-lg mb-1 text-status-warning";
-        message.textContent = detailText || "This QR may trigger SMS/Call/Email or payment actions. Proceed with caution.";
-        message.className = "text-sm text-white";
-    } else {
-        card.className = "mt-6 p-5 rounded-xl border-l-4 border-l-status-success bg-gradient-to-r from-green-900/20 to-transparent";
-        icon.innerHTML = '<i class="fas fa-shield-check text-status-success"></i>';
-        title.textContent = "✅ Security Verified";
-        title.className = "font-bold text-lg mb-1 text-status-success";
-        message.textContent = detailText || "No threats detected. This QR code appears safe to scan.";
-        message.className = "text-sm text-white";
-    }
+            const data = await response.json();
 
-    card.style.display = "block";
-}
+            if (response.ok) {
+                document.getElementById('scanResult').classList.remove('hidden');
+                document.getElementById('qrContent').textContent = data.qr_content || 'N/A';
 
-/* =====================================================
-      Toast Notification
-===================================================== */
-function showToast(message, type = "info") {
-    // Remove existing toast
-    const existingToast = document.querySelector('.toast-notification');
-    if (existingToast) {
-        existingToast.remove();
-    }
+                const tbody = document.getElementById('resultsTable');
+                tbody.innerHTML = '';
 
-    // Create toast
-    const toast = document.createElement('div');
-    toast.className = `toast-notification fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full`;
-    
-    // Set colors based on type
-    const colors = {
-        success: 'bg-gradient-to-r from-green-500 to-emerald-600 border-l-4 border-l-status-success',
-        error: 'bg-gradient-to-r from-red-500 to-rose-600 border-l-4 border-l-status-danger',
-        warning: 'bg-gradient-to-r from-amber-500 to-orange-600 border-l-4 border-l-status-warning',
-        info: 'bg-gradient-to-r from-accent-primary to-accent-secondary border-l-4 border-l-accent-primary'
-    };
+                let totalUrls = 0;
+                let safeCount = 0;
+                let threatCount = 0;
 
-    toast.className += ' ' + colors[type];
-    
-    toast.innerHTML = `
-        <div class="flex items-center gap-3">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 
-                              type === 'error' ? 'exclamation-circle' : 
-                              type === 'warning' ? 'exclamation-triangle' : 
-                              'info-circle'}"></i>
-            <span class="font-medium">${message}</span>
-        </div>
-    `;
-    
-    document.body.appendChild(toast);
-    
-    // Animate in
-    setTimeout(() => {
-        toast.style.transform = 'translateX(0)';
-    }, 10);
-    
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.remove();
+                if (data.urls_found && data.urls_found.length) {
+                    totalUrls = data.urls_found.length;
+                    
+                    data.urls_found.forEach(url => {
+                        const status = data.results[url] || 'Unknown';
+                        const statusLower = status.toLowerCase();
+                        
+                        let severity = 'Low';
+                        let badgeClass = 'status-safe';
+                        
+                        if (statusLower.includes('malicious') || statusLower.includes('phish')) {
+                            severity = 'High';
+                            badgeClass = 'status-malicious';
+                            threatCount++;
+                        } else if (statusLower.includes('suspicious')) {
+                            severity = 'Medium';
+                            badgeClass = 'status-suspicious';
+                            threatCount++;
+                        } else if (statusLower.includes('safe')) {
+                            safeCount++;
+                        }
+
+                        const severityClass = severity === 'High' ? 'text-status-danger' :
+                                              severity === 'Medium' ? 'text-status-warning' :
+                                              'text-status-success';
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="font-mono text-sm">
+                                <a href="${url}" target="_blank" rel="noopener noreferrer" 
+                                   class="text-primary hover:underline break-all">${url}</a>
+                            </td>
+                            <td><span class="status-badge ${badgeClass}">${status}</span></td>
+                            <td class="font-bold ${severityClass}">${severity}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+
+                document.getElementById('totalUrls').textContent = totalUrls;
+                document.getElementById('safeCount').textContent = safeCount;
+                document.getElementById('threatCount').textContent = threatCount;
+
+                showToast('QR code scanned successfully!', 'success');
+            } else {
+                showToast(data.error || 'Failed to scan QR', 'error');
             }
-        }, 300);
-    }, 3000);
-}
+        } catch (err) {
+            console.error('Scan error:', err);
+            showToast('Error scanning QR code', 'error');
+        } finally {
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        }
+    });
 
-    // Initialization complete
-    console.log("QR Threat Detector loaded successfully");
-    console.log("Drag & drop functionality is active");
+    // ===== TOAST NOTIFICATIONS =====
+    function showToast(message, type = 'info') {
+        const existingToast = document.querySelector('.toast-notification');
+        if (existingToast) existingToast.remove();
 
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full';
+        
+        const colors = {
+            success: 'bg-gradient-to-r from-green-500 to-emerald-600 border-l-4 border-l-status-success',
+            error: 'bg-gradient-to-r from-red-500 to-rose-600 border-l-4 border-l-status-danger',
+            warning: 'bg-gradient-to-r from-amber-500 to-orange-600 border-l-4 border-l-status-warning',
+            info: 'bg-gradient-to-r from-accent-primary to-accent-secondary border-l-4 border-l-accent-primary'
+        };
+        
+        toast.className += ' ' + colors[type];
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-circle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+        
+        toast.innerHTML = `
+            <div class="flex items-center gap-3">
+                <i class="fas fa-${icons[type]}"></i>
+                <span class="font-medium">${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.style.transform = 'translateX(0)', 10);
+        
+        setTimeout(() => {
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    console.log('QR Threat Detector initialized');
 });
 </script>
 {% endblock %}

@@ -2,6 +2,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from typing import Optional
+from flask import has_app_context
 from backend.extensions import db
 from backend.models import SystemSettings, SettingsAudit
 
@@ -21,6 +22,16 @@ class SettingsDTO:
 
 
 def _ensure_row() -> SystemSettings:
+    if not has_app_context():
+        logging.warning("Attempted to access database outside app context")
+        # Return a default instance if no app context
+        return SystemSettings(
+            email_alerts=DEFAULT_EMAIL_ALERTS,
+            notification_frequency=DEFAULT_NOTIFICATION_FREQUENCY,
+            auto_scan=DEFAULT_AUTO_SCAN,
+            log_retention_days=DEFAULT_LOG_RETENTION_DAYS,
+        )
+    
     row = SystemSettings.query.first()
     if row:
         return row
