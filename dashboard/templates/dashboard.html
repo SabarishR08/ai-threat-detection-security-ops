@@ -10,6 +10,8 @@
     <!-- Load Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <!-- Load Chart.js for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --neon-green: #39FF14;
@@ -60,6 +62,12 @@
             stroke-dasharray: 440;
             stroke-dashoffset: 440;
             transition: stroke-dashoffset 1.5s ease-in-out;
+        }
+
+        .trend-sparkline {
+            height: 40px;
+            width: 100%;
+            opacity: 0.7;
         }
 
         .cyber-scroll::-webkit-scrollbar {
@@ -234,13 +242,9 @@
                 <p class="text-4xl font-extrabold text-neon-red my-2">
                     {{ stats.active_alerts if stats and stats.active_alerts is not none else 0 }}
                 </p>
-                <div class="flex justify-between items-center text-sm pt-2 border-t border-gray-700">
-                    <span class="{% if stats.active_alerts|default(0) > 0 %}text-neon-red{% else %}text-green-400{% endif %} flex items-center font-mono">
-                        <i data-lucide="{% if stats.active_alerts|default(0) > 0 %}alert-triangle{% else %}shield-check{% endif %}" class="w-4 h-4 mr-1"></i>
-                        {% if stats.active_alerts|default(0) > 0 %}Action Required{% else %}All Clear{% endif %}
-                    </span>
-                    <p class="text-xs text-gray-500">Alert System</p>
-                </div>
+                <div class="text-xs text-gray-400 mb-1">Requires Immediate Attention</div>
+                <canvas id="sparkline-alerts" class="trend-sparkline"></canvas>
+                <p class="text-xs text-gray-500 mt-2">Sample trend (demo)</p>
             </div>
             
             <!-- 7. Quick Actions Panel -->
@@ -281,74 +285,14 @@
                 </div>
             </div>
 
-            <!-- 7. Threat Distribution (Progress Bars) -->
-            <div class="col-span-12 md:col-span-2 p-6 neon-box h-full min-h-[250px]">
-                <h2 class="text-xl font-bold text-neon-blue mb-4">THREAT DISTRIBUTION</h2>
-                <div class="space-y-4 w-full">
-                    {% set email_count = stats.emails_scanned|default(0) %}
-                    {% set url_count = stats.malicious_urls|default(0) %}
-                    {% set qr_count = stats.qr_threats|default(0) %}
-                    {% set soc_count = stats.soc_events|default(0) %}
-                    {% set total = email_count + url_count + qr_count + soc_count %}
-                    
-                    <!-- Email Threats -->
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-blue-400 flex items-center">
-                                <i data-lucide="mail" class="w-3 h-3 mr-1"></i> Email
-                            </span>
-                            <span class="text-white font-bold">{{ email_count }}</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-blue-500 h-2 rounded-full transition-all duration-500" 
-                                 style="width: {% if total > 0 %}{{ (email_count / total * 100)|round|int }}%{% else %}0%{% endif %}"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- URL Threats -->
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-red-400 flex items-center">
-                                <i data-lucide="globe-lock" class="w-3 h-3 mr-1"></i> URLs
-                            </span>
-                            <span class="text-white font-bold">{{ url_count }}</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-red-500 h-2 rounded-full transition-all duration-500" 
-                                 style="width: {% if total > 0 %}{{ (url_count / total * 100)|round|int }}%{% else %}0%{% endif %}"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- QR Threats -->
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-purple-400 flex items-center">
-                                <i data-lucide="qr-code" class="w-3 h-3 mr-1"></i> QR
-                            </span>
-                            <span class="text-white font-bold">{{ qr_count }}</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-purple-500 h-2 rounded-full transition-all duration-500" 
-                                 style="width: {% if total > 0 %}{{ (qr_count / total * 100)|round|int }}%{% else %}0%{% endif %}"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- SOC Events -->
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-green-400 flex items-center">
-                                <i data-lucide="server-cog" class="w-3 h-3 mr-1"></i> SOC
-                            </span>
-                            <span class="text-white font-bold">{{ soc_count }}</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-green-500 h-2 rounded-full transition-all duration-500" 
-                                 style="width: {% if total > 0 %}{{ (soc_count / total * 100)|round|int }}%{% else %}0%{% endif %}"></div>
-                        </div>
-                    </div>
+            <!-- 7. Threat Distribution Chart -->
+            <div class="col-span-12 md:col-span-2 p-6 neon-box flex flex-col justify-center items-center h-full min-h-[250px]">
+                <h2 class="text-xl font-bold text-neon-blue mb-2">THREAT DISTRIBUTION</h2>
+                <div class="w-full h-48">
+                    <canvas id="threatDistributionChart"></canvas>
                 </div>
-                <p class="text-xs text-gray-500 mt-4 text-center">
-                    Total Events: {{ total }}
+                <p class="text-xs text-gray-500 mt-2 text-center">
+                    Distribution across modules
                 </p>
             </div>
             
@@ -607,9 +551,7 @@
     <!-- JavaScript for Dynamic Content -->
     <script>
         // Initialize Lucide Icons
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+        lucide.createIcons();
 
         // Update timestamp
         function updateTime() {
@@ -620,13 +562,8 @@
                 second: '2-digit',
                 hour12: false 
             });
-            const dateTimeString = `${now.toLocaleDateString()} ${timeString}`;
-            
-            const lastUpdate = document.getElementById('last-update');
-            const timestampFooter = document.getElementById('timestamp-footer');
-            
-            if (lastUpdate) lastUpdate.textContent = dateTimeString;
-            if (timestampFooter) timestampFooter.textContent = dateTimeString;
+            document.getElementById('last-update').textContent = `${now.toLocaleDateString()} ${timeString}`;
+            document.getElementById('timestamp-footer').textContent = `${now.toLocaleDateString()} ${timeString}`;
         }
         setInterval(updateTime, 1000);
         updateTime();
@@ -647,10 +584,7 @@
                 btn.classList.remove('text-gray-500');
                 btn.classList.add('text-neon-blue', 'border-b-2', 'border-neon-blue');
                 const tabId = btn.getAttribute('data-tab');
-                const tabContent = document.getElementById(tabId);
-                if (tabContent) {
-                    tabContent.classList.remove('hidden');
-                }
+                document.getElementById(tabId).classList.remove('hidden');
             });
         });
 
@@ -680,36 +614,123 @@
             const scoreText = document.getElementById('score-text');
             const healthStatus = document.getElementById('health-status');
 
-            if (scoreRing && scoreText && healthStatus) {
-                scoreRing.style.strokeDashoffset = offset;
-                scoreText.textContent = Math.round(score);
+            scoreRing.style.strokeDashoffset = offset;
+            scoreText.textContent = Math.round(score);
 
-                let color = 'var(--neon-blue)';
-                let status = 'OPERATIONAL';
-                let statusClass = 'text-neon-green';
+            let color = 'var(--neon-blue)';
+            let status = 'OPERATIONAL';
+            let statusClass = 'text-neon-green';
 
-                if (score < 70) {
-                    color = 'var(--neon-blue)';
-                    status = 'ATTENTION REQUIRED';
-                    statusClass = 'text-neon-blue';
-                }
-                if (score < 50) {
-                    color = 'var(--neon-red)';
-                    status = 'CRITICAL';
-                    statusClass = 'text-neon-red';
-                }
-
-                scoreRing.style.stroke = color;
-                scoreText.style.color = color;
-                scoreText.style.textShadow = `0 0 4px ${color}, 0 0 8px ${color}60`;
-                healthStatus.textContent = status;
-                healthStatus.className = 'font-semibold ' + statusClass;
+            if (score < 70) {
+                color = 'var(--neon-blue)';
+                status = 'ATTENTION REQUIRED';
+                statusClass = 'text-neon-blue';
             }
+            if (score < 50) {
+                color = 'var(--neon-red)';
+                status = 'CRITICAL';
+                statusClass = 'text-neon-red';
+            }
+
+            scoreRing.style.stroke = color;
+            scoreText.style.color = color;
+            scoreText.style.textShadow = `0 0 4px ${color}, 0 0 8px ${color}60`;
+            healthStatus.textContent = status;
+            healthStatus.className = 'font-semibold ' + statusClass;
         }
         updateHealthScore();
 
-        // No charts or canvas - all visualizations use pure HTML/CSS
-        // This prevents any rendering bugs
+        // Initialize Charts
+        function initializeCharts() {
+            // Threat Distribution Chart (Pie)
+            const threatCtx = document.getElementById('threatDistributionChart');
+            if (threatCtx) {
+                new Chart(threatCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Email Threats', 'URL Threats', 'QR Threats', 'SOC Alerts'],
+                        datasets: [{
+                            data: [
+                                {{ stats.emails_scanned|default(0) }},
+                                {{ stats.malicious_urls|default(0) }},
+                                {{ stats.qr_threats|default(0) }},
+                                {{ stats.soc_events|default(0) }}
+                            ],
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)', // blue
+                                'rgba(239, 68, 68, 0.8)',   // red
+                                'rgba(168, 85, 247, 0.8)',  // purple
+                                'rgba(34, 197, 94, 0.8)'    // green
+                            ],
+                            borderColor: [
+                                'rgb(59, 130, 246)',
+                                'rgb(239, 68, 68)',
+                                'rgb(168, 85, 247)',
+                                'rgb(34, 197, 94)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#9CA3AF',
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Sparkline for alerts
+            const sparkCtx = document.getElementById('sparkline-alerts');
+            if (sparkCtx) {
+                const ctx = sparkCtx.getContext('2d');
+                const width = sparkCtx.width = sparkCtx.offsetWidth;
+                const height = sparkCtx.height = sparkCtx.offsetHeight;
+                
+                // Demo data – replace with aggregated alert counts from backend when available
+                const alertData = (window.alertTrendData && Array.isArray(window.alertTrendData)) ? window.alertTrendData : [3, 5, 2, 4, 6, 8, 5, 4];
+                
+                // Draw sparkline
+                ctx.clearRect(0, 0, width, height);
+                
+                if (alertData.length < 2) return;
+                
+                const minVal = Math.min(...alertData);
+                const maxVal = Math.max(...alertData);
+                const range = maxVal - minVal || 1;
+                
+                ctx.beginPath();
+                ctx.strokeStyle = '#FF3131';
+                ctx.lineWidth = 2;
+                
+                for (let i = 0; i < alertData.length; i++) {
+                    const x = (i / (alertData.length - 1)) * width;
+                    const y = height - ((alertData[i] - minVal) / range) * height * 0.8;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeCharts);
+        
+        // Redraw on resize
+        window.addEventListener('resize', initializeCharts);
     </script>
 </div>
 {% endblock %}

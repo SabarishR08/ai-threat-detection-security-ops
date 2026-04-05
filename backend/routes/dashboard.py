@@ -14,6 +14,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 def settings_audit():
     return render_template("settings_audit.html", active_page="settings_audit")
 
+@dashboard_bp.route("/")
 @dashboard_bp.route("/dashboard")
 def dashboard():
     try:
@@ -59,7 +60,7 @@ def dashboard():
             "emails_scanned": ThreatLog.query.filter_by(category="email").count(),
             "malicious_urls": ThreatLog.query.filter(
                 (ThreatLog.category == "url_scan") &
-                (func.lower(ThreatLog.status) == "malicious")
+                (ThreatLog.status == "malicious")
             ).count(),
             "qr_threats": ThreatLog.query.filter_by(category="qr").count(),
             "soc_events": ThreatLog.query.filter_by(category="soc").count(),

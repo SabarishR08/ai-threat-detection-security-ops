@@ -60,35 +60,6 @@ if os.path.exists(CACHE_FILE):
             url_cache.update(url_cache_data)
             domain_cache.update(domain_cache_data)
             performance_metrics.update(cache_data.get("metrics", {}))
-
-            # Normalize legacy cache entries to dict format
-            for key in list(url_cache.keys()):
-                normalized = None
-                entry = url_cache.get(key)
-                if isinstance(entry, dict):
-                    normalized = entry
-                elif isinstance(entry, str):
-                    normalized = {"status": entry}
-                if normalized is None:
-                    del url_cache[key]
-                    continue
-                normalized.setdefault("timestamp", datetime.utcnow().isoformat())
-                normalized.setdefault("source", "cache_load")
-                url_cache[key] = normalized
-
-            for key in list(domain_cache.keys()):
-                normalized = None
-                entry = domain_cache.get(key)
-                if isinstance(entry, dict):
-                    normalized = entry
-                elif isinstance(entry, str):
-                    normalized = {"status": entry}
-                if normalized is None:
-                    del domain_cache[key]
-                    continue
-                normalized.setdefault("timestamp", datetime.utcnow().isoformat())
-                normalized.setdefault("source", "cache_load")
-                domain_cache[key] = normalized
             
             # Rebuild bloom filter from cache keys
             bloom_filter.update(url_cache.keys())
@@ -205,17 +176,6 @@ def is_cache_valid(cache_entry: dict) -> bool:
     return (datetime.utcnow() - cached_time) < ttl
 
 
-def _normalize_cache_entry(entry, source: str) -> dict | None:
-    """Normalize cache entries to a dict with status and timestamp."""
-    if isinstance(entry, dict):
-        entry.setdefault("timestamp", datetime.utcnow().isoformat())
-        entry.setdefault("source", source)
-        return entry
-    if isinstance(entry, str):
-        return {"status": entry, "timestamp": datetime.utcnow().isoformat(), "source": source}
-    return None
-
-
 @lru_cache(maxsize=1024)
 def extract_domain(url: str) -> str:
     """Extract domain from URL for domain-level caching (cached for performance)."""
@@ -246,32 +206,26 @@ async def fetch_vt_status(client, url, use_cache: bool = True):
         # Continue to API call
     else:
         # Step 1: Check URL-level cache with TTL validation
-        if url in url_cache:
-            entry = _normalize_cache_entry(url_cache.get(url), "url_cache")
-            if entry is None:
-                del url_cache[url]
-            elif is_cache_valid(entry):
+        if url in url_cache and isinstance(url_cache[url], dict):
+            if is_cache_valid(url_cache[url]):
                 # Move to end for LRU (mark as recently used)
                 url_cache.move_to_end(url)
                 performance_metrics["cache_hits"] += 1
                 logging.debug(f"[VirusTotal] Cache HIT for {url}")
-                return url, entry["status"]
+                return url, url_cache[url]["status"]
             else:
                 logging.debug(f"[VirusTotal] Cache EXPIRED for {url}")
                 del url_cache[url]  # Remove stale entry
                 bloom_filter.discard(url)
         
         # Step 2: Check domain-level cache (fallback for subdomains)
-        if domain in domain_cache:
-            entry = _normalize_cache_entry(domain_cache.get(domain), "domain_cache")
-            if entry is None:
-                del domain_cache[domain]
-            elif is_cache_valid(entry):
+        if domain in domain_cache and isinstance(domain_cache[domain], dict):
+            if is_cache_valid(domain_cache[domain]):
                 domain_cache.move_to_end(domain)  # LRU update
                 performance_metrics["cache_hits"] += 1
                 logging.debug(f"[VirusTotal] Domain cache HIT for {domain}")
                 # Use domain verdict for URL
-                status = entry["status"]
+                status = domain_cache[domain]["status"]
                 url_cache[url] = {"status": status, "timestamp": datetime.utcnow().isoformat(), "source": "domain_cache"}
                 bloom_filter.add(url)
                 return url, status
@@ -296,21 +250,20 @@ async def fetch_vt_status(client, url, use_cache: bool = True):
             "https://www.virustotal.com/api/v3/urls",
             headers={"x-apikey": api_key, "Accept": "application/json"},
             data={"url": url},
-            timeout=8  # Reduced from 10 for faster response
+            timeout=10  # Reduced from 30
         )
         resp.raise_for_status()
         analysis_id = resp.json()["data"]["id"]
 
-        # Step 5: Poll with VERY SHORT timeout (2 attempts max = 3 seconds total)
-        # This reduces false positives from waiting indefinitely on slow VT responses
+        # Step 5: Poll with SHORT timeout (3 attempts max = 6 seconds)
         final_status = "Pending"
-        for attempt in range(2):  # Reduced from 3 attempts
-            await asyncio.sleep(0.5 if attempt > 0 else 0)  # 500ms wait between polls
+        for attempt in range(3):  # Reduced from 10
+            await asyncio.sleep(1 if attempt > 0 else 0)  # 1s wait between polls
             
             analysis_resp = await client.get(
                 f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
                 headers={"x-apikey": api_key, "Accept": "application/json"},
-                timeout=8  # Reduced from 10
+                timeout=10  # Reduced from 30
             )
             analysis_resp.raise_for_status()
             attributes = analysis_resp.json().get("data", {}).get("attributes", {})
@@ -319,28 +272,20 @@ async def fetch_vt_status(client, url, use_cache: bool = True):
             if stats:
                 malicious = stats.get("malicious", 0)
                 suspicious = stats.get("suspicious", 0)
-                harmless = stats.get("harmless", 0)
-                undetected = stats.get("undetected", 0)
-                
-                # Require multiple engines to flag for higher confidence
-                total_scans = malicious + suspicious + harmless + undetected
-                if total_scans > 0:
-                    if malicious >= 3:  # At least 3 engines must flag as malicious
-                        final_status = "Malicious"
-                    elif malicious >= 1 or suspicious >= 5:  # Lower threshold for suspicious
-                        final_status = "Suspicious"
-                    elif harmless >= (total_scans * 0.7):  # 70%+ clean
-                        final_status = "Safe"
-                    else:
-                        final_status = "Safe"  # Default to safe to reduce false positives
-                    break
+                if malicious > 0:
+                    final_status = "Malicious"
+                elif suspicious > 0:
+                    final_status = "Suspicious"
+                else:
+                    final_status = "Safe"
+                break  # got final verdict
             
-        url_cache[url] = {"status": final_status, "timestamp": datetime.utcnow().isoformat(), "source": "api"}
+        url_cache[url] = final_status
         save_cache()
         return url, final_status
 
     except Exception as e:
-        url_cache[url] = {"status": "Error", "timestamp": datetime.utcnow().isoformat(), "source": "error"}
+        url_cache[url] = "Error"
         save_cache()
         logging.error(f"[VirusTotal] Error for {url}: {e}")
         return url, "Error"

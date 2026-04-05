@@ -4,16 +4,11 @@ import httpx
 import asyncio
 import logging
 import os
-from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from backend.utils.url_utils import normalize_url
 
 # Load environment variables from project root
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 PHISHTANK_API_KEY = os.getenv("PHISHTANK_API_KEY")  # Optional
-
-_PT_CACHE = {}
-_PT_CACHE_TTL = timedelta(minutes=5)
 
 
 async def check_url_phishtank(url: str) -> dict:
@@ -22,15 +17,6 @@ async def check_url_phishtank(url: str) -> dict:
     Uses public API (no key needed for basic checks).
     Returns status: phishing, safe, or error.
     """
-    normalized_url = normalize_url(url) or url
-
-    cached = _PT_CACHE.get(normalized_url)
-    if cached:
-        cached_result, cached_time = cached
-        if datetime.utcnow() - cached_time < _PT_CACHE_TTL:
-            return cached_result
-        del _PT_CACHE[normalized_url]
-
     try:
         async with httpx.AsyncClient(timeout=5, follow_redirects=True) as client:
             # PhishTank requires form-encoded POST with specific user agent
@@ -39,7 +25,7 @@ async def check_url_phishtank(url: str) -> dict:
             }
             
             data = {
-                "url": normalized_url,
+                "url": url,
                 "format": "json"
             }
             
@@ -66,39 +52,37 @@ async def check_url_phishtank(url: str) -> dict:
             valid = results.get("valid", False)
             
             if verified and in_database:
-                result = {
-                    "url": normalized_url,
+                return {
+                    "url": url,
                     "status": "Phishing",
                     "verified": True,
                     "phish_id": results.get("phish_id"),
                     "submission_time": results.get("submission_time")
                 }
             elif in_database and not verified:
-                result = {
-                    "url": normalized_url,
+                return {
+                    "url": url,
                     "status": "Suspicious",
                     "verified": False,
                     "in_database": True
                 }
             else:
-                result = {
-                    "url": normalized_url,
+                return {
+                    "url": url,
                     "status": "Safe",
                     "verified": False,
                     "in_database": False
                 }
-            _PT_CACHE[normalized_url] = (result, datetime.utcnow())
-            return result
                 
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 403:
             logging.warning(f"PhishTank API blocked (consider adding API key)")
             return {"url": url, "status": "N/A", "error": "API blocked"}
         logging.error(f"PhishTank HTTP error for {url}: {e}")
-        return {"url": normalized_url, "status": "Error", "error": str(e)}
+        return {"url": url, "status": "Error", "error": str(e)}
     except Exception as e:
         logging.error(f"PhishTank check failed for {url}: {e}")
-        return {"url": normalized_url, "status": "N/A", "error": str(e)}
+        return {"url": url, "status": "N/A", "error": str(e)}
 
 
 async def check_urls_phishtank_async(urls: list) -> list:

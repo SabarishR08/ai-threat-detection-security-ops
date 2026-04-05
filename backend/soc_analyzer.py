@@ -3,7 +3,6 @@ import re
 import json
 import os
 import asyncio
-import logging
 from datetime import datetime
 from dotenv import load_dotenv
 import httpx

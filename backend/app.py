@@ -19,6 +19,11 @@ from backend.models import BlacklistedIP
 # Entry-point only: build app via factory
 app = create_app()
 
+# Root route delegated to dashboard blueprint
+@app.route("/")
+def home():
+    return redirect(url_for("dashboard.dashboard"))
+
 # IP blocking middleware using safe client IP extraction
 @app.before_request
 def block_malicious_ips():

@@ -157,8 +157,8 @@ async def detect_phishing_in_email(content: str) -> dict:
         }
     
     # Import threat detection services
-    from backend.services.phishtank_service import check_url_phishtank
-    from backend.services.google_safebrowsing_service import check_url_safebrowsing
+    from services.phishtank_service import check_url_phishtank
+    from services.google_safebrowsing_service import check_url_safebrowsing
     
     phishing_count = 0
     suspicious_count = 0

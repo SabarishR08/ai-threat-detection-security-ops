@@ -1,18 +1,20 @@
 import os
+
 # Ensure background jobs are disabled during tests for determinism
 os.environ.setdefault("ENABLE_BACKGROUND_JOBS", "false")
 
 import io
+import os
 import sys
 import logging
 import pytest
 import types
 from unittest.mock import patch
 
-# Ensure project root is on path so `backend.*` imports resolve in CI
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+# Ensure backend package is on path for direct module imports used inside app.py
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 
 from backend.extensions import db, limiter
 from backend.app import app as flask_app

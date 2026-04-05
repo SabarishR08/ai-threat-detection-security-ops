@@ -5,9 +5,9 @@ Run with: pytest tests/test_routes.py -v
 
 import pytest
 import json
-from backend.app_init import create_app
-from backend.extensions import db
-from backend.models import ThreatLog
+from app_init import create_app
+from extensions import db
+from models import ThreatLog
 
 
 @pytest.fixture

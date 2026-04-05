@@ -21,10 +21,9 @@ from backend.services.google_safebrowsing_service import check_url_safebrowsing
 from backend.services.phishtank_service import check_url_phishtank
 from backend.services.abuseipdb_service import check_ip_fresh, check_ip
 from backend.services.rdap_service import rdap_lookup
-from backend.services.virustotal_service import url_cache, check_url_virustotal_async, is_cache_valid
+from backend.services.virustotal_service import url_cache, check_url_virustotal_async
 from backend.services.gemini_service import analyze_threat_fusion
 from backend.services.whitelist_service import get_whitelist_service
-from backend.utils.url_utils import normalize_url
 
 VERDICT_ORDER = ["Malicious", "Phishing", "Suspicious", "Safe", "Unknown"]
 
@@ -276,8 +275,6 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
     }
     """
 
-    normalized_url = normalize_url(url) or url
-
     result = {
         "final_status": "Unknown",
         "severity": "Unknown",
@@ -296,23 +293,23 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
     # ========================================================================
     # STEP 0.5: CHECK RECENT SCANS (5-minute deduplication)
     # ========================================================================
-    recent = check_recent_scan(normalized_url)
+    recent = check_recent_scan(url)
     if recent and not force_refresh:
-        logging.info(f"Returning recent scan result for {normalized_url}")
+        logging.info(f"Returning recent scan result for {url}")
         return recent
     
     # ========================================================================
     # STEP 1: WHITELIST CHECK (Fast path - bypass all threat checks)
     # ========================================================================
     whitelist_service = get_whitelist_service()
-    if whitelist_service.is_whitelisted_url(url) or whitelist_service.is_whitelisted_url(normalized_url):
+    if whitelist_service.is_whitelisted_url(url):
         result["final_status"] = "Safe"
         result["severity"] = "Low"
         result["detected_by"] = "Whitelist"
         result["whitelisted"] = True
         result["scan_time_ms"] = int((datetime.utcnow() - scan_start).total_seconds() * 1000)
-        logging.info(f"URL whitelisted: {normalized_url}")
-        cache_scan_result(normalized_url, result)
+        logging.info(f"URL whitelisted: {url}")
+        cache_scan_result(url, result)
         return result
 
     # ========================================================================
@@ -320,9 +317,8 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
     # ========================================================================
     
     # 2a) VirusTotal (cache-aware for performance)
-    cache_entry = url_cache.get(normalized_url) if not force_refresh else None
-    vt_cache_hit = bool(cache_entry and is_cache_valid(cache_entry))
-    vt_status = await check_url_virustotal_async(normalized_url, use_cache=not force_refresh)
+    vt_cache_hit = (not force_refresh and url in url_cache)
+    vt_status = await check_url_virustotal_async(url, use_cache=not force_refresh)
     result["cache"]["virustotal"] = vt_cache_hit
     result["sources"]["virustotal"] = {"status": vt_status, "cache": vt_cache_hit}
 
@@ -333,7 +329,7 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
     # 2b) Google Safe Browsing + PhishTank (parallel for low latency)
     async def safe_gsb():
         try:
-            return await asyncio.wait_for(check_url_safebrowsing(normalized_url), timeout=3.5)
+            return await asyncio.wait_for(check_url_safebrowsing(url), timeout=3.5)
         except asyncio.TimeoutError:
             return {"status": "Unavailable", "error": "SafeBrowsing timeout"}
         except Exception as e:
@@ -341,7 +337,7 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
 
     async def safe_pt():
         try:
-            return await asyncio.wait_for(check_url_phishtank(normalized_url), timeout=3.5)
+            return await asyncio.wait_for(check_url_phishtank(url), timeout=3.5)
         except asyncio.TimeoutError:
             return {"status": "Unavailable", "error": "PhishTank timeout"}
         except Exception as e:
@@ -368,7 +364,7 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
         result["scan_time_ms"] = int((datetime.utcnow() - scan_start).total_seconds() * 1000)
         
         # Track correlation
-        correlation = track_threat_correlation(normalized_url, source_final, source_detected_by)
+        correlation = track_threat_correlation(url, source_final, source_detected_by)
         result["threat_correlation"] = correlation
         
         pipeline_metrics["threats_detected"] += 1
@@ -377,80 +373,26 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
         return result
 
     # ========================================================================
-    # STEP 3: DETERMINISTIC VERDICT AGGREGATION (Multi-source consensus)
+    # STEP 3: DETERMINISTIC VERDICT AGGREGATION (Priority order)
     # ========================================================================
-    # FALSE-POSITIVE PROTECTION: Require consensus from multiple sources
-    # - Single source = Suspicious (unless PhishTank verified)
-    # - Two+ sources = Malicious/Phishing (high confidence)
-    # - PhishTank verified = immediate Phishing (trusted source)
+    # Priority: PhishTank → VirusTotal → Google Safe Browsing
+    # First malicious/phishing hit wins (short-circuit for performance)
     
-    # Score contributions from each source
-    threat_scores = {"phishing": 0, "malicious": 0, "suspicious": 0}
-    source_flags = []
-    
-    # 3a) PhishTank (highest weight for verified phishing)
-    if pt_status == "phishing" and pt.get("verified", False):
-        threat_scores["phishing"] += 10  # High weight for verified
-        source_flags.append("PhishTank (verified)")
-    elif pt_status == "phishing":
-        threat_scores["phishing"] += 5  # Medium weight for unverified
-        source_flags.append("PhishTank (unverified)")
-    elif pt_status == "suspicious":
-        threat_scores["suspicious"] += 3
-        source_flags.append("PhishTank (suspicious)")
-    
-    # 3b) VirusTotal (multi-engine consensus requires multiple detections)
-    vt_status_lower = str(vt_status).lower()
-    if vt_status_lower == "malicious":
-        threat_scores["malicious"] += 7
-        source_flags.append("VirusTotal")
-    elif vt_status_lower == "suspicious":
-        threat_scores["suspicious"] += 4
-        source_flags.append("VirusTotal (suspicious)")
-    
+    # 3a) PhishTank (highest priority for phishing)
+    if source_final is None and pt_status in ("phishing", "suspicious"):
+        source_final = "Phishing" if pt_status == "phishing" else "Suspicious"
+        source_detected_by = "PhishTank"
+
+    # 3b) VirusTotal (multi-engine consensus)
+    if source_final is None and str(vt_status).lower() in ("malicious", "suspicious"):
+        source_final = "Malicious" if str(vt_status).lower() == "malicious" else "Suspicious"
+        source_detected_by = "VirusTotal"
+
     # 3c) Google Safe Browsing (Google's threat intelligence)
     gsb_status = str(gsb.get("status", "")).upper()
-    if "MALWARE" in gsb_status:
-        threat_scores["malicious"] += 7
-        source_flags.append("Google Safe Browsing (malware)")
-    elif "SOCIAL_ENGINEERING" in gsb_status:
-        threat_scores["phishing"] += 7
-        source_flags.append("Google Safe Browsing (phishing)")
-    elif "UNWANTED" in gsb_status:
-        threat_scores["suspicious"] += 4
-        source_flags.append("Google Safe Browsing (unwanted)")
-    
-    # Calculate final verdict based on consensus scoring
-    max_score = max(threat_scores.values())
-    
-    if max_score >= 10:
-        # High confidence threat (verified PhishTank or multiple sources)
-        if threat_scores["phishing"] >= 10:
-            source_final = "Phishing"
-            source_detected_by = " + ".join(source_flags)
-        elif threat_scores["malicious"] >= 10:
-            source_final = "Malicious"
-            source_detected_by = " + ".join(source_flags)
-    elif max_score >= 7:
-        # Medium-high confidence (single authoritative source)
-        if threat_scores["phishing"] >= 7:
-            source_final = "Phishing"
-            source_detected_by = " + ".join(source_flags)
-        elif threat_scores["malicious"] >= 7:
-            source_final = "Malicious"
-            source_detected_by = " + ".join(source_flags)
-    elif max_score >= 5:
-        # Lower confidence - mark as Suspicious to reduce false positives
-        source_final = "Suspicious"
-        source_detected_by = " + ".join(source_flags)
-    
-    # Store consensus details for transparency
-    result["consensus"] = {
-        "scores": threat_scores,
-        "max_score": max_score,
-        "sources_flagged": source_flags,
-        "threshold": "high" if max_score >= 10 else "medium" if max_score >= 7 else "low"
-    }
+    if source_final is None and ("MALWARE" in gsb_status or "SOCIAL_ENGINEERING" in gsb_status or "UNWANTED" in gsb_status):
+        source_final = "Malicious" if "MALWARE" in gsb_status else "Phishing"
+        source_detected_by = "Google Safe Browsing"
 
     # ========================================================================
     # STEP 3.5: RULE-BASED DETERMINISTIC CHECKS (Local, fast heuristics)
@@ -458,7 +400,7 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
     # Run local rule engine to catch obvious phishing patterns (suspicious TLDs,
     # numeric host parts, IP-based hosts, excessive subdomains). Rules are
     # deterministic and can set the verdict if no higher-priority source matched.
-    rule_result = _rule_based_url_checks(normalized_url)
+    rule_result = _rule_based_url_checks(url)
     result["sources"]["rules"] = rule_result
 
     if source_final is None and rule_result.get("flag"):
@@ -469,7 +411,7 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
     # ========================================================================
     # STEP 4: OPTIONAL IP/RDAP ENRICHMENT (Non-blocking, for context only)
     # ========================================================================
-    host = extract_domain(normalized_url)
+    host = extract_domain(url)
     if include_ip_enrichment:
         ip_info = None
         rdap_info = None
@@ -506,7 +448,7 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
     # 4. If Gemini fails/times out → verdict unchanged (safe degradation)
     
     fusion_payload = {
-        "url": normalized_url,
+        "url": url,
         "virustotal": result["sources"].get("virustotal"),
         "google_safebrowsing": result["sources"].get("google_safebrowsing"),
         "phishtank": result["sources"].get("phishtank"),
@@ -558,13 +500,13 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
         # Deterministic source found a threat → Use that verdict
         final = source_final
         detected_by = source_detected_by
-        logging.info(f"Threat detected by {detected_by}: {normalized_url} → {final}")
+        logging.info(f"Threat detected by {detected_by}: {url} → {final}")
     else:
         # No deterministic threat found → Safe verdict
         # Gemini can add context but cannot change this to "Malicious"
         final = "Safe"
         detected_by = "All sources (deterministic)"
-        logging.info(f"URL verified safe: {normalized_url}")
+        logging.info(f"URL verified safe: {url}")
     
     # NOTE: We store Gemini's opinion in result["ai"] for transparency
     # but it does NOT influence the final_status. This is the correct
@@ -584,14 +526,14 @@ async def unified_check_url_async(url: str, force_refresh: bool = False, include
     
     # Track threat correlation
     if final in ["Malicious", "Phishing", "Suspicious"]:
-        correlation = track_threat_correlation(normalized_url, final, detected_by)
+        correlation = track_threat_correlation(url, final, detected_by)
         result["threat_correlation"] = correlation
         pipeline_metrics["threats_detected"] += 1
     
     # Cache the result
-    cache_scan_result(normalized_url, result)
+    cache_scan_result(url, result)
     
-    logging.info(f"Threat scan completed for {normalized_url}: {final} (detected by {detected_by}) in {scan_duration:.2f}s")
+    logging.info(f"Threat scan completed for {url}: {final} (detected by {detected_by}) in {scan_duration:.2f}s")
     return result
 
 
@@ -615,6 +557,8 @@ async def lookup_url_async(url: str, force_refresh: bool = False) -> dict:
     Returns instant results (<100ms).
     For complete real-time lookups, use force_refresh=True (slower but includes all sources).
     """
+    from services.virustotal_service import check_url_virustotal_async, url_cache
+    
     if not force_refresh:
         # FAST PATH: VT cache + PhishTank only (PhishTank is fast, ~100ms)
         async def quick_phishtank_check():

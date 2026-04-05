@@ -25,7 +25,6 @@ class WhitelistService:
         # Major platforms & services
         "github.com",
         "github.io",
-        "githubusercontent.com",
         "gitlab.com",
         "bitbucket.org",
         "google.com",
@@ -34,41 +33,19 @@ class WhitelistService:
         "google.fr",
         "google.it",
         "google.es",
-        "google.co.uk",
-        "google.co.jp",
-        "googleusercontent.com",
-        "gstatic.com",
-        "ggpht.com",
         "microsoft.com",
-        "microsoftonline.com",
-        "live.com",
-        "msn.com",
         "apple.com",
-        "icloud.com",
-        "me.com",
         "amazon.com",
-        "amazonaws.com",
-        "cloudfront.net",
         "facebook.com",
-        "fbcdn.net",
         "instagram.com",
         "twitter.com",
-        "twimg.com",
         "x.com",
         "linkedin.com",
-        "licdn.com",
         "youtube.com",
-        "ytimg.com",
-        "youtu.be",
         "reddit.com",
-        "redd.it",
-        "redditmedia.com",
         "stackoverflow.com",
-        "stackexchange.com",
         "wikipedia.org",
-        "wikimedia.org",
         "wordpress.com",
-        "wp.com",
         
         # Development & tools
         "npmjs.com",
@@ -78,33 +55,21 @@ class WhitelistService:
         "docker.com",
         "dockerhub.com",
         "kubernetes.io",
-        "k8s.io",
         "aws.amazon.com",
         "azure.microsoft.com",
-        "visualstudio.com",
         "cloud.google.com",
         "heroku.com",
-        "herokuapp.com",
-        "vercel.app",
-        "netlify.app",
-        "cloudflare.com",
-        "fastly.com",
-        "akamai.com",
         
         # Communication & collaboration
         "slack.com",
-        "slack-edge.com",
         "discord.com",
-        "discordapp.com",
         "telegram.org",
-        "t.me",
         "whatsapp.com",
         "whatsapp.net",
         "messenger.com",
         "teams.microsoft.com",
         "zoom.us",
         "meet.google.com",
-        "webex.com",
         
         # Email & productivity
         "gmail.com",
@@ -115,12 +80,6 @@ class WhitelistService:
         "sharepoint.com",
         "onedrive.com",
         "dropbox.com",
-        "box.com",
-        "notion.so",
-        "airtable.com",
-        "trello.com",
-        "asana.com",
-        "monday.com",
         
         # Threat intel services (meta - don't flag tools that detect threats!)
         "phishtank.com",
@@ -133,7 +92,6 @@ class WhitelistService:
         "shodan.io",
         "urlhaus.abuse.ch",
         "openphish.com",
-        "safebrowsing.googleapis.com",
         
         # Security vendors
         "kaspersky.com",
@@ -143,11 +101,6 @@ class WhitelistService:
         "symantec.com",
         "norton.com",
         "sophos.com",
-        "crowdstrike.com",
-        "paloaltonetworks.com",
-        "fortinet.com",
-        "checkpoint.com",
-        "trendmicro.com",
         
         # Financial & e-commerce (commonly spoofed but actual services should pass)
         "paypal.com",
@@ -155,33 +108,19 @@ class WhitelistService:
         "square.com",
         "braintree.com",
         "2checkout.com",
-        "shop.app",
-        "shopify.com",
-        "ebay.com",
         
         # News & media
         "bbc.co.uk",
-        "bbc.com",
         "cnn.com",
         "nytimes.com",
         "theguardian.com",
         "reuters.com",
         "apnews.com",
-        "bloomberg.com",
-        "wsj.com",
-        
-        # CDNs and infrastructure
-        "cdnjs.cloudflare.com",
-        "jsdelivr.net",
-        "unpkg.com",
-        "fonts.googleapis.com",
-        "ajax.googleapis.com",
     }
     
     def __init__(self):
         """Initialize whitelist service"""
         self.user_whitelist = self._load_user_whitelist()
-        self._cache = {}  # URL -> bool cache for faster repeated checks
     
     @staticmethod
     def _load_user_whitelist() -> Set[str]:
@@ -249,7 +188,7 @@ class WhitelistService:
     
     def is_whitelisted_url(self, url: str) -> bool:
         """
-        Check if a URL's domain is whitelisted (with caching)
+        Check if a URL's domain is whitelisted
         
         Args:
             url: Full URL to check
@@ -257,24 +196,10 @@ class WhitelistService:
         Returns:
             True if URL's domain is whitelisted
         """
-        # Check cache first
-        if url in self._cache:
-            return self._cache[url]
-        
         try:
             parsed = urlparse(url)
             domain = parsed.netloc.lower()
-            result = self.is_whitelisted_domain(domain)
-            
-            # Cache result (limit cache size)
-            if len(self._cache) > 10000:
-                # Clear half of cache when full
-                keys = list(self._cache.keys())
-                for k in keys[:5000]:
-                    del self._cache[k]
-            
-            self._cache[url] = result
-            return result
+            return self.is_whitelisted_domain(domain)
         except Exception as e:
             logger.error(f"Error parsing URL {url}: {e}")
             return False

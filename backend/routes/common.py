@@ -13,7 +13,6 @@ from flask import Blueprint, render_template, request, jsonify, send_file
 from sqlalchemy import func
 from backend.extensions import limiter, db
 from backend.models import ThreatLog
-from backend.utils.health_check import get_system_health
 from backend.utils.settings_service import (
     get_settings,
     update_settings,
@@ -197,25 +196,6 @@ def get_threat_trends():
 @common_bp.route('/threat-trends')
 def threat_trends():
     return jsonify({"message": "Threat Trends Data"})
-
-
-@common_bp.route("/api/health", methods=["GET"])
-def health_check():
-    """
-    Comprehensive system health check endpoint
-    Returns detailed status of all system components
-    """
-    try:
-        health_status = get_system_health()
-        status_code = 200 if health_status["status"] == "healthy" else 503
-        return jsonify(health_status), status_code
-    except Exception as e:
-        logging.error(f"Health check failed: {e}")
-        return jsonify({
-            "status": "error",
-            "error": "Health check failed",
-            "details": str(e)
-        }), 500
 
 
 @common_bp.route('/threat-distribution')

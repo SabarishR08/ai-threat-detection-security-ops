@@ -10,11 +10,6 @@ from backend.extensions import db, socketio, limiter, cors
 from backend.utils.helpers import format_timestamp_ist
 from backend.services.maintenance import cleanup_old_logs
 from backend.utils.settings_service import get_settings
-from backend.middleware.security import (
-    add_security_headers,
-    rate_limit_exceeded_handler,
-    request_logger_middleware
-)
 from backend.routes.dashboard import dashboard_bp
 from backend.routes.threat_lookup import threat_lookup_bp
 from backend.routes.qr import qr_bp
@@ -70,13 +65,6 @@ def create_app():
     limiter.init_app(app)
     cors.init_app(app, resources={r"/*": {"origins": "*"}})
 
-    # Register middleware
-    app.after_request(add_security_headers)
-    app.before_request(request_logger_middleware)
-    
-    # Custom error handler for rate limiting
-    app.register_error_handler(429, rate_limit_exceeded_handler)
-
     # Logging setup
     os.makedirs(os.path.join(base_dir, "logs"), exist_ok=True)
     logging.basicConfig(
@@ -96,12 +84,6 @@ def create_app():
     app.register_blueprint(monitoring_bp)
     app.register_blueprint(performance_bp)
     app.register_blueprint(email_scanner)
-
-    # Root route - redirect to dashboard
-    @app.route("/")
-    def home():
-        from flask import redirect, url_for
-        return redirect(url_for("dashboard.dashboard"))
 
     # Create tables
     with app.app_context():

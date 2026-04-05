@@ -19,6 +19,19 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("✅ Dashboard Scripts Loaded Successfully!");
 });
 
+let liveUpdateTimer = null;
+
+function getChartAnimationOptions() {
+    const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+        return false;
+    }
+    return {
+        duration: 250,
+        easing: "easeOutQuad"
+    };
+}
+
 /* ✅ Ensure Socket.IO is loaded */
 if (typeof io === "undefined") {
     console.error("❌ Socket.IO is not loaded. Check if it's included in your HTML.");
@@ -74,13 +87,18 @@ function setupLiveUpdates() {
 
     var socket = io.connect(window.location.origin);
     socket.on("update_logs", function () {
-        console.log("🔄 Live update received! Reloading logs...");
-        fetchLogs();
-        loadThreatGraph();
-        loadThreatChart();
-        loadThreatDistribution();
-        loadThreatStatistics();
-        loadThreatTrends(); // Reload threat trends on update
+        if (liveUpdateTimer) {
+            clearTimeout(liveUpdateTimer);
+        }
+        liveUpdateTimer = setTimeout(function () {
+            console.log("🔄 Live update received! Refreshing dashboard...");
+            fetchLogs();
+            loadThreatGraph();
+            loadThreatChart();
+            loadThreatDistribution();
+            loadThreatStatistics();
+            loadThreatTrends();
+        }, 350);
     });
 }
 
@@ -121,9 +139,7 @@ function loadThreatGraph() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: {
-                        animateScale: true
-                    },
+                    animation: getChartAnimationOptions(),
                     plugins: {
                         legend: { position: "bottom" }
                     }
@@ -172,6 +188,7 @@ function loadThreatTrends() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: getChartAnimationOptions(),
                     scales: {
                         x: {
                             title: {
@@ -251,6 +268,11 @@ function loadThreatDistribution() {
                         data: Object.values(data),
                         backgroundColor: ["#ff5733", "#33ff57", "#3357ff", "#ff33a1", "#a133ff"]
                     }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: getChartAnimationOptions()
                 }
             });
 
@@ -290,6 +312,11 @@ function loadThreatStatistics() {
                         data: Object.values(data),
                         backgroundColor: ["#ff9999", "#99ff99", "#9999ff", "#ffcc99", "#cc99ff"]
                     }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: getChartAnimationOptions()
                 }
             });
 
@@ -297,18 +324,6 @@ function loadThreatStatistics() {
         })
         .catch(error => console.error("❌ Error loading threat statistics:", error));
 }
-
-/* ✅ Ensure all graphs load on page load */
-document.addEventListener("DOMContentLoaded", function () {
-    console.log("🚀 Loading all graphs...");
-    loadThreatGraph();
-    loadThreatChart();
-    loadThreatTimeline();
-    loadThreatDistribution();
-    loadThreatStatistics();
-    loadThreatTrends(); // Added Threat Trends
-    console.log("✅ All graphs initialized!");
-});
 
 // Provide a safe fallback for threat chart if HTML lacks a target canvas
 function loadThreatChart() {
@@ -343,6 +358,7 @@ function loadThreatChart() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: getChartAnimationOptions(),
                     plugins: { legend: { display: false } }
                 }
             });

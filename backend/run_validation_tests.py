@@ -146,12 +146,12 @@ def test_imports_and_dependencies():
     """Test all critical imports."""
     print("[TEST] Imports and dependencies...")
     try:
-        from backend.services.threat_lookup_service import unified_check_url_async
-        from backend.services.gemini_service import detect_phishing_in_email, classify_email_rest
-        from backend.services.google_safebrowsing_service import check_url_safebrowsing
-        from backend.services.phishtank_service import check_url_phishtank
-        from backend.models import ThreatLog
-        from backend.extensions import db
+        from services.threat_lookup_service import unified_check_url_async
+        from services.gemini_service import detect_phishing_in_email, classify_email_rest
+        from services.google_safebrowsing_service import check_url_safebrowsing
+        from services.phishtank_service import check_url_phishtank
+        from models import ThreatLog
+        from extensions import db
         print(f"[PASS] All core service imports successful")
         return True
     except Exception as e:

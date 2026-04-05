@@ -9,7 +9,6 @@ from flask import Blueprint, render_template, request, jsonify
 from backend.extensions import limiter, db
 from backend.models import ThreatLog
 from backend.services.threat_lookup_service import unified_check_url
-from backend.middleware.security import validate_url_input, validate_json_input
 from backend.services.url_monitoring_service import (
     add_url_to_monitor, rescan_monitored_url, scan_all_monitored_urls,
     get_monitoring_statistics, get_url_monitor
@@ -29,7 +28,6 @@ def threat_lookup():
 
 @threat_lookup_bp.route("/api/threat_lookup", methods=["POST"])
 @limiter.limit("5 per second")
-@validate_json_input(max_size=10240)  # 10KB max
 def threat_lookup_api():
     """
     Threat intelligence lookup API
@@ -41,11 +39,6 @@ def threat_lookup_api():
     
     if not url:
         return jsonify({"error": "URL is required"}), 400
-    
-    # Validate URL input
-    is_valid, error_msg = validate_url_input(url)
-    if not is_valid:
-        return jsonify({"error": error_msg}), 400
     
     try:
         # CRITICAL: unified_check_url enforces LLM trust boundary
@@ -72,7 +65,6 @@ def threat_lookup_api():
 
 @threat_lookup_bp.route("/check-url", methods=["POST"])
 @limiter.limit("5 per second")
-@validate_json_input(max_size=10240)  # 10KB max
 def check_url():
     """
     URL scanning endpoint with logging and alerting
@@ -89,11 +81,6 @@ def check_url():
     
     if not url:
         return jsonify({"error": "URL is required"}), 400
-    
-    # Validate URL input
-    is_valid, error_msg = validate_url_input(url)
-    if not is_valid:
-        return jsonify({"error": error_msg}), 400
 
     try:
         client_ip = get_client_ip(request)

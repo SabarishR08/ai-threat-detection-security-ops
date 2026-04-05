@@ -71,4 +71,4 @@ class SettingsAudit(db.Model):
     new_value = db.Column(db.Text)
 
     def __repr__(self):
-        return f"<SettingsAudit {self.field} {self.id}>"
+        return f"<AuditLog {self.setting_name} {self.id}>"

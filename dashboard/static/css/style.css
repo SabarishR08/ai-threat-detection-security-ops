@@ -42,7 +42,7 @@ body {
         radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
         radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
         radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-    background-attachment: fixed;
+    background-attachment: scroll;
     color: var(--text-main); 
     font-family: var(--font-main);
     min-height: 100vh;
@@ -101,6 +101,10 @@ body::before {
     display: block;
 }
 
+.neon-button:hover span {
+    animation: none;
+}
+
 /* Top border animation */
 .neon-button span:nth-child(1) {
     top: 0;
@@ -108,7 +112,7 @@ body::before {
     width: 100%;
     height: 2px;
     background: linear-gradient(90deg, transparent, var(--accent-primary));
-    animation: animate1 1s linear infinite;
+    animation: none;
 }
 
 @keyframes animate1 {
@@ -127,8 +131,7 @@ body::before {
     width: 2px;
     height: 100%;
     background: linear-gradient(180deg, transparent, var(--accent-primary));
-    animation: animate2 1s linear infinite;
-    animation-delay: 0.25s;
+    animation: none;
 }
 
 @keyframes animate2 {
@@ -147,8 +150,7 @@ body::before {
     width: 100%;
     height: 2px;
     background: linear-gradient(270deg, transparent, var(--accent-primary));
-    animation: animate3 1s linear infinite;
-    animation-delay: 0.50s;
+    animation: none;
 }
 
 @keyframes animate3 {
@@ -167,8 +169,7 @@ body::before {
     width: 2px;
     height: 100%;
     background: linear-gradient(360deg, transparent, var(--accent-primary));
-    animation: animate4 1s linear infinite;
-    animation-delay: 0.75s;
+    animation: none;
 }
 
 @keyframes animate4 {
@@ -187,18 +188,17 @@ body::before {
 /* Glass Panel */
 .glass-panel {
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid var(--glass-border);
     border-radius: 16px;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
 .glass-panel:hover {
     border-color: var(--glass-highlight);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
 }
 
 /* Section Headers */
@@ -421,7 +421,7 @@ body::before {
     border-radius: 50%;
     border: none;
     cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
+    transition: background 0.2s, box-shadow 0.2s;
     z-index: 1000;
     background: linear-gradient(45deg, var(--accent-secondary), var(--accent-primary));
     color: white;
@@ -430,7 +430,6 @@ body::before {
 
 .dark-mode-toggle:hover {
     background: linear-gradient(45deg, var(--status-warning), var(--accent-primary));
-    transform: scale(1.1);
     box-shadow: 0px 0px 15px rgba(var(--status-warning-rgb, 255, 184, 0), 0.9);
 }
 
@@ -460,7 +459,7 @@ body::before {
     font-size: 1.2em;
     margin-right: 12px;
     color: var(--accent-primary);
-    transition: color 0.3s;
+    transition: color 0.2s;
 }
 
 .glass-panel:hover .icon {
@@ -553,6 +552,14 @@ body::before {
 
     .glass-panel {
         margin: 10px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
     }
 }
 
