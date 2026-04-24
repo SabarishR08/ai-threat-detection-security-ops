@@ -2,6 +2,7 @@ import os
 
 # Ensure background jobs are disabled during tests for determinism
 os.environ.setdefault("ENABLE_BACKGROUND_JOBS", "false")
+os.environ.setdefault("TESTING", "true")
 
 import io
 import os

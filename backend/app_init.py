@@ -85,12 +85,13 @@ def create_app():
     app.register_blueprint(performance_bp)
     app.register_blueprint(email_scanner)
 
-    # Create tables
-    with app.app_context():
-        db.create_all()
-        # Clean up old logs using configured retention
-        settings = get_settings()
-        cleanup_old_logs(settings.log_retention_days)
+    # Skip database bootstrap during tests; fixtures manage the test database lifecycle.
+    if os.getenv("TESTING", "false").lower() not in ("1", "true", "yes"):
+        with app.app_context():
+            db.create_all()
+            # Clean up old logs using configured retention
+            settings = get_settings()
+            cleanup_old_logs(settings.log_retention_days)
 
     return app
 
