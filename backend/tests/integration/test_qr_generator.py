@@ -12,10 +12,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app_init import create_app
 
-# Create app context
-app = create_app()
-client = app.test_client()
-
 # Test payloads for each type
 test_cases = [
     {
@@ -73,62 +69,6 @@ test_cases = [
     },
 ]
 
-print("=" * 70)
-print("Testing QR Generator API - Multi-Payload Support")
-print("=" * 70)
-
-passed = 0
-failed = 0
-
-for test_case in test_cases:
-    name = test_case["name"]
-    payload = test_case["payload"]
-    
-    print(f"\n{name}:")
-    print(f"  Payload: {json.dumps(payload, indent=4)}")
-    
-    # Send request
-    response = client.post(
-        "/api/generate-qr",
-        json=payload,
-        content_type="application/json"
-    )
-    
-    # Check response
-    if response.status_code == 200:
-        data = response.get_json()
-        
-        if "qr_code" in data and data["qr_code"]:
-            # Verify it's valid base64
-            try:
-                qr_bytes = base64.b64decode(data["qr_code"])
-                
-                # Verify it's a PNG (starts with PNG signature)
-                if qr_bytes[:8] == b'\x89PNG\r\n\x1a\n':
-                    print(f"  ✓ PASSED - QR code generated successfully")
-                    print(f"    - Size: {len(qr_bytes)} bytes")
-                    print(f"    - Payload Type: {data.get('type')}")
-                    print(f"    - Encoded Payload: {data.get('payload')[:50]}...")
-                    passed += 1
-                else:
-                    print(f"  ✗ FAILED - Invalid PNG signature")
-                    failed += 1
-            except Exception as e:
-                print(f"  ✗ FAILED - Invalid base64: {e}")
-                failed += 1
-        else:
-            print(f"  ✗ FAILED - No qr_code in response: {data}")
-            failed += 1
-    else:
-        data = response.get_json()
-        print(f"  ✗ FAILED - Status {response.status_code}: {data}")
-        failed += 1
-
-# Test error cases
-print("\n" + "=" * 70)
-print("Testing Error Cases")
-print("=" * 70)
-
 error_cases = [
     {
         "name": "Missing URL",
@@ -144,28 +84,87 @@ error_cases = [
     },
 ]
 
-for test_case in error_cases:
-    name = test_case["name"]
-    payload = test_case["payload"]
-    
-    print(f"\n{name}:")
-    response = client.post(
-        "/api/generate-qr",
-        json=payload,
-        content_type="application/json"
-    )
-    
-    if response.status_code >= 400:
-        data = response.get_json()
-        print(f"  ✓ PASSED - Correctly returned error: {data.get('error')}")
-        passed += 1
-    else:
-        print(f"  ✗ FAILED - Should have returned error but got status {response.status_code}")
-        failed += 1
 
-# Summary
-print("\n" + "=" * 70)
-print(f"Results: {passed} passed, {failed} failed")
-print("=" * 70)
+def main() -> int:
+    # Create app context only for manual script execution.
+    app = create_app()
+    client = app.test_client()
 
-sys.exit(0 if failed == 0 else 1)
+    print("=" * 70)
+    print("Testing QR Generator API - Multi-Payload Support")
+    print("=" * 70)
+
+    passed = 0
+    failed = 0
+
+    for test_case in test_cases:
+        name = test_case["name"]
+        payload = test_case["payload"]
+
+        print(f"\n{name}:")
+        print(f"  Payload: {json.dumps(payload, indent=4)}")
+
+        response = client.post(
+            "/api/generate-qr",
+            json=payload,
+            content_type="application/json"
+        )
+
+        if response.status_code == 200:
+            data = response.get_json()
+
+            if "qr_code" in data and data["qr_code"]:
+                try:
+                    qr_bytes = base64.b64decode(data["qr_code"])
+
+                    if qr_bytes[:8] == b'\x89PNG\r\n\x1a\n':
+                        print("  ✓ PASSED - QR code generated successfully")
+                        print(f"    - Size: {len(qr_bytes)} bytes")
+                        print(f"    - Payload Type: {data.get('type')}")
+                        print(f"    - Encoded Payload: {data.get('payload')[:50]}...")
+                        passed += 1
+                    else:
+                        print("  ✗ FAILED - Invalid PNG signature")
+                        failed += 1
+                except Exception as e:
+                    print(f"  ✗ FAILED - Invalid base64: {e}")
+                    failed += 1
+            else:
+                print(f"  ✗ FAILED - No qr_code in response: {data}")
+                failed += 1
+        else:
+            data = response.get_json()
+            print(f"  ✗ FAILED - Status {response.status_code}: {data}")
+            failed += 1
+
+    print("\n" + "=" * 70)
+    print("Testing Error Cases")
+    print("=" * 70)
+
+    for test_case in error_cases:
+        name = test_case["name"]
+        payload = test_case["payload"]
+
+        print(f"\n{name}:")
+        response = client.post(
+            "/api/generate-qr",
+            json=payload,
+            content_type="application/json"
+        )
+
+        if response.status_code >= 400:
+            data = response.get_json()
+            print(f"  ✓ PASSED - Correctly returned error: {data.get('error')}")
+            passed += 1
+        else:
+            print(f"  ✗ FAILED - Should have returned error but got status {response.status_code}")
+            failed += 1
+
+    print("\n" + "=" * 70)
+    print(f"Results: {passed} passed, {failed} failed")
+    print("=" * 70)
+    return 0 if failed == 0 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

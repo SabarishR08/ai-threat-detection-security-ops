@@ -10,11 +10,6 @@ import time
 import sys
 from datetime import datetime
 
-# Force UTF-8 encoding for Windows
-if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
 BASE_URL = "http://localhost:5000"
 
 # Known public phishing/threat sources
@@ -48,7 +43,7 @@ def fetch_urlhaus_phishing_urls(limit=10):
         print(f"    Error: {e}")
     return []
 
-def test_url_against_backend(url):
+def run_url_against_backend(url):
     """Test a single URL against /check-url endpoint."""
     try:
         payload = {"url": url}
@@ -92,6 +87,10 @@ def test_url_against_backend(url):
         }
 
 def main():
+    if sys.platform == 'win32':
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
     print("\n" + "=" * 80)
     print(" PHISHING URL TEST SUITE (REAL-WORLD SAMPLES) ".center(80))
     print(f" Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ".center(80))
@@ -125,7 +124,7 @@ def main():
     print(f"{'-' * 80}")
     
     for i, url in enumerate(all_urls, 1):
-        result = test_url_against_backend(url)
+        result = run_url_against_backend(url)
         results.append(result)
         
         if result.get("success"):

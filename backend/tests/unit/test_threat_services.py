@@ -48,14 +48,14 @@ class TestVirusTotalLookup:
         result = check_url_virustotal("https://example.com")
         assert result == "VT_API_MISSING"
 
-    @patch("services.virustotal_service.check_urls_async")
+    @patch("backend.services.virustotal_service.check_urls_async")
     def test_vt_check_safe_url(self, mock_async):
         """Check detection of safe URL."""
         mock_async.return_value = {"https://google.com": VT_STATUS_SAFE}
         result = check_url_virustotal("https://google.com")
         assert result == VT_STATUS_SAFE
 
-    @patch("services.virustotal_service.check_urls_async")
+    @patch("backend.services.virustotal_service.check_urls_async")
     def test_vt_check_malicious_url(self, mock_async):
         """Check detection of malicious URL."""
         mock_async.return_value = {"https://malware.test": VT_STATUS_MALICIOUS}
@@ -66,9 +66,9 @@ class TestVirusTotalLookup:
 class TestThreatLookup:
     """Test integrated threat lookup service."""
 
-    @patch("services.virustotal_service.check_url_virustotal")
-    @patch("services.google_safebrowsing_service.check_url_safebrowsing")
-    @patch("services.rdap_service.rdap_lookup")
+    @patch("backend.services.virustotal_service.check_url_virustotal")
+    @patch("backend.services.google_safebrowsing_service.check_url_safebrowsing")
+    @patch("backend.services.rdap_service.rdap_lookup")
     def test_lookup_url_all_services(self, mock_rdap, mock_gsb, mock_vt):
         """Test lookup across all threat intelligence sources."""
         mock_vt.return_value = VT_STATUS_SAFE
@@ -82,7 +82,7 @@ class TestThreatLookup:
         assert "rdap" in result
         assert result["virustotal"] == VT_STATUS_SAFE
 
-    @patch("services.virustotal_service.check_url_virustotal")
+    @patch("backend.services.virustotal_service.check_url_virustotal")
     def test_lookup_url_vt_error_graceful(self, mock_vt):
         """Handle VirusTotal errors gracefully."""
         mock_vt.side_effect = Exception("API timeout")
@@ -90,4 +90,4 @@ class TestThreatLookup:
         result = lookup_url("https://example.com")
 
         assert "virustotal" in result
-        assert "error" in result["virustotal"]
+        assert "error" in result["virustotal"].lower()

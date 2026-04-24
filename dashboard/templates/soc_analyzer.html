@@ -77,6 +77,54 @@
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
+    .result-panel {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+    .result-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    .result-table th,
+    .result-table td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0.65rem 0.5rem;
+        text-align: left;
+        vertical-align: top;
+    }
+    .result-table th {
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 0.75rem;
+    }
+    .chip {
+        display: inline-block;
+        padding: 0.3rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid var(--glass-border);
+        font-size: 0.75rem;
+        margin: 0.15rem;
+        background: rgba(255, 255, 255, 0.04);
+        color: #d9f8ff;
+    }
+    .mono-block {
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid var(--glass-border);
+        border-radius: 10px;
+        padding: 0.85rem;
+        max-height: 320px;
+        overflow: auto;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
     @media (max-width: 768px) {
         .file-upload-area {
             padding: 1.5rem;
@@ -267,33 +315,54 @@ document.getElementById('logForm').addEventListener('submit', async function(e) 
 function renderResults(data) {
     const resultBox = document.getElementById('results');
     const aiAnalysis = data.ai_analysis || {};
-    const threats = aiAnalysis.threats || [];
+    const threats = Array.isArray(data.final_threats) && data.final_threats.length
+        ? data.final_threats
+        : (aiAnalysis.threats || []);
     const recommendations = aiAnalysis.recommendations || [];
+    const immediateActions = aiAnalysis.immediate_actions || [];
+    const iocs = aiAnalysis.iocs || [];
+    const affectedAssets = aiAnalysis.affected_assets || [];
+
+    const escapeHtml = (value) => String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+
+    const sevClass = (severity) => {
+        if (severity === 'Critical') return 'bg-red-900/50 text-red-200';
+        if (severity === 'High') return 'bg-orange-900/50 text-orange-200';
+        if (severity === 'Medium') return 'bg-yellow-900/50 text-yellow-200';
+        return 'bg-green-900/50 text-green-200';
+    };
+
+    const severity = data.final_severity || aiAnalysis.severity || 'Unknown';
+    const confidence = Number.isFinite(Number(aiAnalysis.confidence)) ? Number(aiAnalysis.confidence) : null;
+    const incidentType = aiAnalysis.incident_type || 'Uncategorized';
+    const findingsCount = (data.rule_based_findings || []).length;
+    const ipsCount = (data.ips_found || []).length;
     
     let html = `<div class="border-t border-glass-border pt-6">
         <h4 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
             <i class="fas fa-chart-bar text-primary"></i> Analysis Results
         </h4>
         
-        <!-- Summary -->
-        <div class="mb-8 p-4 bg-glass-bg rounded-lg border border-glass-border">
-            <label class="setting-label mb-2">Summary</label>
-            <p class="text-white mb-3">${aiAnalysis.summary || 'No summary available'}</p>
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-muted">Severity:</span>
-                <span class="px-3 py-1 rounded-full text-xs font-bold ${
-                    aiAnalysis.severity === 'Critical' ? 'bg-red-900/50 text-red-200' :
-                    aiAnalysis.severity === 'High' ? 'bg-orange-900/50 text-orange-200' :
-                    aiAnalysis.severity === 'Medium' ? 'bg-yellow-900/50 text-yellow-200' :
-                    'bg-green-900/50 text-green-200'
-                }">${aiAnalysis.severity || 'Unknown'}</span>
+        <div class="mb-6 p-4 bg-glass-bg rounded-lg border border-glass-border">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+                <span class="px-3 py-1 rounded-full text-xs font-bold ${sevClass(severity)}">${escapeHtml(severity)}</span>
+                <span class="chip">Incident: ${escapeHtml(incidentType)}</span>
+                ${confidence !== null ? `<span class="chip">Confidence: ${escapeHtml(confidence)}%</span>` : ''}
+                <span class="chip">Analyzed: ${escapeHtml(new Date(data.timestamp || Date.now()).toLocaleString())}</span>
             </div>
+            <label class="setting-label mb-2">Executive Summary</label>
+            <p class="text-white leading-relaxed">${escapeHtml(aiAnalysis.summary || 'No summary available')}</p>
         </div>
         
         <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
             <div class="stat-card">
-                <div class="stat-value">${(data.ips_found || []).length}</div>
+                <div class="stat-value">${ipsCount}</div>
                 <div class="stat-label">IPs Found</div>
             </div>
             <div class="stat-card">
@@ -303,60 +372,90 @@ function renderResults(data) {
                 <div class="stat-label">Threats</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">${(data.rule_based_findings || []).length}</div>
+                <div class="stat-value">${findingsCount}</div>
                 <div class="stat-label">Findings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${recommendations.length}</div>
+                <div class="stat-label">Recommendations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${iocs.length}</div>
+                <div class="stat-label">IOCs</div>
             </div>
         </div>`;
     
     // Threats Section
     if (threats.length > 0) {
         html += `<div class="mb-8">
-            <label class="setting-label mb-4">Detected Threats (${threats.length})</label>
-            <div class="space-y-3">`;
-        threats.forEach(threat => {
-            html += `<div class="threat-card">
-                <div class="flex items-center justify-between mb-3">
-                    <h5 class="font-bold text-white">${threat.type || 'Unknown Threat'}</h5>
-                    <span class="text-xs px-3 py-1 rounded-full font-semibold ${
-                        threat.severity === 'Critical' ? 'bg-red-900/50 text-red-200' :
-                        threat.severity === 'High' ? 'bg-orange-900/50 text-orange-200' :
-                        'bg-yellow-900/50 text-yellow-200'
-                    }">${threat.severity || 'Medium'}</span>
-                </div>`;
-            if (threat.source_ips && threat.source_ips.length > 0) {
-                html += `<p class="text-sm text-muted mb-2">Source IPs:</p>
-                <div class="flex flex-wrap gap-2 mb-3">
-                    ${threat.source_ips.map(ip => `<span class="px-2 py-1 bg-glass-bg rounded text-xs font-mono text-accent-primary">${ip}</span>`).join('')}
-                </div>`;
-            }
-            if (threat.attack_indicators && threat.attack_indicators.length > 0) {
-                html += `<p class="text-sm text-muted mb-2">Attack Indicators:</p>
-                <ul class="text-sm text-white/90 space-y-1 ml-4">`;
-                threat.attack_indicators.forEach(ind => {
-                    html += `<li>• ${ind}</li>`;
-                });
-                html += `</ul>`;
-            }
-            html += `</div>`;
+            <label class="setting-label mb-4">Threat Matrix (${threats.length})</label>
+            <div class="result-panel overflow-x-auto">
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th>Threat</th>
+                            <th>Severity</th>
+                            <th>Evidence</th>
+                            <th>Source IPs</th>
+                            <th>Indicators</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        threats.forEach((threat, idx) => {
+            const normalized = typeof threat === 'string'
+                ? { type: threat, severity: 'Medium', description: threat, source_ips: [], attack_indicators: [], evidence: [] }
+                : {
+                    type: threat.type || `Threat ${idx + 1}`,
+                    severity: threat.severity || 'Medium',
+                    description: threat.description || threat.type || 'No description available',
+                    source_ips: Array.isArray(threat.source_ips) ? threat.source_ips : [],
+                    attack_indicators: Array.isArray(threat.attack_indicators) ? threat.attack_indicators : [],
+                    evidence: Array.isArray(threat.evidence) ? threat.evidence : []
+                };
+
+            html += `<tr>
+                <td>
+                    <div class="font-semibold text-white">${escapeHtml(normalized.type)}</div>
+                    <div class="text-xs text-muted mt-1">${escapeHtml(normalized.description)}</div>
+                </td>
+                <td><span class="px-2 py-1 rounded-full text-xs font-semibold ${sevClass(normalized.severity)}">${escapeHtml(normalized.severity)}</span></td>
+                <td>
+                    ${normalized.evidence.length
+                        ? normalized.evidence.map(e => `<div class="text-xs text-white/90 mb-1">• ${escapeHtml(e)}</div>`).join('')
+                        : '<span class="text-xs text-muted">No evidence provided</span>'}
+                </td>
+                <td>
+                    ${normalized.source_ips.length
+                        ? normalized.source_ips.map(ip => `<span class="chip">${escapeHtml(ip)}</span>`).join('')
+                        : '<span class="text-xs text-muted">None</span>'}
+                </td>
+                <td>
+                    ${normalized.attack_indicators.length
+                        ? normalized.attack_indicators.map(ind => `<div class="text-xs text-white/90 mb-1">• ${escapeHtml(ind)}</div>`).join('')
+                        : '<span class="text-xs text-muted">None</span>'}
+                </td>
+            </tr>`;
         });
-        html += `</div></div>`;
+
+        html += `</tbody></table></div></div>`;
     }
     
     // Rule-based Findings
-    if ((data.rule_based_findings || []).length > 0) {
+    if (findingsCount > 0) {
         html += `<div class="mb-8">
-            <label class="setting-label mb-4">Rule-based Findings (${(data.rule_based_findings || []).length})</label>
+            <label class="setting-label mb-4">Rule-based Findings (${findingsCount})</label>
             <div class="space-y-3">`;
         (data.rule_based_findings || []).forEach(item => {
             html += `<div class="p-4 rounded-lg bg-glass-bg border border-glass-border">
-                <p class="text-sm mb-2"><b>Type:</b> <span class="text-accent-primary font-semibold">${item.type}</span></p>
-                ${item.count ? `<p class="text-sm mb-2"><b>Count:</b> ${item.count}</p>` : ''}
+                <p class="text-sm mb-2"><b>Type:</b> <span class="text-accent-primary font-semibold">${escapeHtml(item.type)}</span></p>
+                ${item.count ? `<p class="text-sm mb-2"><b>Count:</b> ${escapeHtml(item.count)}</p>` : ''}
                 <p class="text-sm"><b>Severity:</b> 
                     <span class="font-bold ${
                         item.severity === 'Critical' ? 'text-red-400' :
                         item.severity === 'High' ? 'text-orange-400' :
                         'text-green-400'
-                    }">${item.severity || 'N/A'}</span>
+                    }">${escapeHtml(item.severity || 'N/A')}</span>
                 </p>
             </div>`;
         });
@@ -364,14 +463,38 @@ function renderResults(data) {
     }
     
     // IPs Found
-    if (data.ips_found && data.ips_found.length > 0) {
+    if (ipsCount > 0) {
         html += `<div class="mb-8">
-            <label class="setting-label mb-4">External IP Addresses (${data.ips_found.length})</label>
+            <label class="setting-label mb-4">External IP Addresses (${ipsCount})</label>
             <div class="flex flex-wrap gap-2">`;
         data.ips_found.forEach(ip => {
-            html += `<span class="px-3 py-2 bg-glass-bg rounded-lg border border-glass-border text-sm font-mono text-accent-primary">${ip}</span>`;
+            html += `<span class="px-3 py-2 bg-glass-bg rounded-lg border border-glass-border text-sm font-mono text-accent-primary">${escapeHtml(ip)}</span>`;
         });
         html += `</div></div>`;
+    }
+
+    // IOCs
+    if (iocs.length > 0) {
+        html += `<div class="mb-8">
+            <label class="setting-label mb-4">Indicators of Compromise (${iocs.length})</label>
+            <div class="result-panel">${iocs.map(i => `<span class="chip">${escapeHtml(i)}</span>`).join('')}</div>
+        </div>`;
+    }
+
+    // Affected assets
+    if (affectedAssets.length > 0) {
+        html += `<div class="mb-8">
+            <label class="setting-label mb-4">Affected Assets</label>
+            <div class="result-panel">${affectedAssets.map(a => `<span class="chip">${escapeHtml(a)}</span>`).join('')}</div>
+        </div>`;
+    }
+
+    // Immediate actions
+    if (immediateActions.length > 0) {
+        html += `<div class="mb-8">
+            <label class="setting-label mb-4">Immediate Actions</label>
+            <div class="result-panel"><ol class="list-decimal list-inside space-y-2 ml-2">${immediateActions.map(action => `<li class="text-white">${escapeHtml(action)}</li>`).join('')}</ol></div>
+        </div>`;
     }
     
     // Recommendations
@@ -380,10 +503,16 @@ function renderResults(data) {
             <label class="setting-label mb-4">Recommended Actions</label>
             <ol class="list-decimal list-inside space-y-2 ml-2">`;
         recommendations.forEach(rec => {
-            html += `<li class="text-white">${rec}</li>`;
+            html += `<li class="text-white">${escapeHtml(rec)}</li>`;
         });
         html += `</ol></div>`;
     }
+
+    // Raw output for advanced triage users
+    html += `<details class="mb-2">
+        <summary class="text-sm text-muted cursor-pointer">View raw analysis payload</summary>
+        <div class="mono-block mt-3">${escapeHtml(JSON.stringify(data, null, 2))}</div>
+    </details>`;
     
     html += `</div>`;
     resultBox.innerHTML = html;

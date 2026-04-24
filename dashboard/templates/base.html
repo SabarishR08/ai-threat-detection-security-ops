@@ -393,6 +393,11 @@ main {
 .fade-in {
     animation: fadeIn 0.5s ease-out;
 }
+
+/* Lighter nav: disable animated snake borders on main section buttons */
+.menu-link span {
+    animation: none !important;
+}
     </style>
 </head>
 <body>
@@ -410,7 +415,7 @@ main {
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('common.logs') }}" class="neon-button">
+                        <a href="{{ url_for('common.logs') }}" class="neon-button menu-link">
                             <span></span>
                             <span></span>
                             <span></span>
@@ -419,7 +424,7 @@ main {
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('threat_lookup.threat_lookup') }}" class="neon-button">
+                        <a href="{{ url_for('threat_lookup.threat_lookup') }}" class="neon-button menu-link">
                             <span></span>
                             <span></span>
                             <span></span>
@@ -428,7 +433,7 @@ main {
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('email_scanner.email_scanner_page') }}" class="neon-button">
+                        <a href="{{ url_for('email_scanner.email_scanner_page') }}" class="neon-button menu-link">
                             <span></span>
                             <span></span>
                             <span></span>
@@ -437,7 +442,7 @@ main {
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('soc.soc_analyzer') }}" class="neon-button">
+                        <a href="{{ url_for('soc.soc_analyzer') }}" class="neon-button menu-link">
                             <span></span>
                             <span></span>
                             <span></span>
@@ -446,7 +451,7 @@ main {
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('qr.qr_detector') }}" class="neon-button">
+                        <a href="{{ url_for('qr.qr_detector') }}" class="neon-button menu-link">
                             <span></span>
                             <span></span>
                             <span></span>

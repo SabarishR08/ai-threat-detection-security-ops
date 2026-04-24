@@ -3,6 +3,7 @@ import re
 import json
 import os
 import asyncio
+import logging
 from datetime import datetime
 from dotenv import load_dotenv
 import httpx
@@ -57,14 +58,37 @@ async def ai_gemini_analysis_rest(log_text):
 You are a Security Operations Center (SOC) AI.
 
 Analyze the following logs and identify:
-- Threat summary
-- Suspicious IPs
-- Attack indicators
+- Executive summary
+- Incident type/category
 - Severity level (Low / Medium / High / Critical)
+- Confidence score (0-100)
+- Threats list (each with: type, severity, description, attack_indicators, source_ips, evidence)
+- Indicators of compromise list (iocs)
+- Affected assets (if inferable)
+- Immediate actions (short list)
 - Recommended mitigation steps
 
-Respond ONLY in structured JSON format with fields:
-summary, severity, threats (list), recommendations (list)
+Respond ONLY in structured JSON format using this shape:
+{{
+    "summary": "string",
+    "incident_type": "string",
+    "severity": "Low|Medium|High|Critical|Unknown",
+    "confidence": 0,
+    "threats": [
+        {{
+            "type": "string",
+            "severity": "Low|Medium|High|Critical",
+            "description": "string",
+            "attack_indicators": ["string"],
+            "source_ips": ["string"],
+            "evidence": ["string"]
+        }}
+    ],
+    "iocs": ["string"],
+    "affected_assets": ["string"],
+    "immediate_actions": ["string"],
+    "recommendations": ["string"]
+}}
 
 Logs to analyze:
 {log_text}
@@ -106,7 +130,27 @@ Logs to analyze:
 
                 text_output = response.json()["candidates"][0]["content"]["parts"][0]["text"]
                 cleaned = text_output.strip().replace("```json", "").replace("```", "").strip()
-                return json.loads(cleaned)
+
+                # Parse strict JSON first; if model adds prose, recover first JSON object.
+                try:
+                    parsed = json.loads(cleaned)
+                except Exception:
+                    match = re.search(r"\{[\s\S]*\}", cleaned)
+                    if not match:
+                        raise
+                    parsed = json.loads(match.group(0))
+
+                if isinstance(parsed, dict):
+                    parsed.setdefault("summary", "No summary available")
+                    parsed.setdefault("severity", "Unknown")
+                    parsed.setdefault("threats", [])
+                    parsed.setdefault("recommendations", [])
+                    parsed.setdefault("incident_type", "Uncategorized")
+                    parsed.setdefault("confidence", 0)
+                    parsed.setdefault("iocs", [])
+                    parsed.setdefault("affected_assets", [])
+                    parsed.setdefault("immediate_actions", [])
+                return parsed
             except Exception as e:
                 if attempt < max_retries - 1:
                     await asyncio.sleep(delay)

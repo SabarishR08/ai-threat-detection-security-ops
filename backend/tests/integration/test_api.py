@@ -9,7 +9,7 @@ not part of the current Flask app surface. Retained as a manual runner only.
 
 import pytest
 
-pytestmark = pytest.mark.xfail(reason="Legacy API script; endpoints not in current app", strict=False)
+pytestmark = pytest.mark.skip(reason="Legacy API script; endpoints not in current app")
 
 import requests
 import json

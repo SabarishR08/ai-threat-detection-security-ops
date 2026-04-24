@@ -70,7 +70,6 @@ logs/
 # Cache
 cache/
 *.cache
-__pycache__/
 
 # Media/Uploads
 uploads/

@@ -1,6 +1,8 @@
 import io
 import json
+import base64
 from unittest import mock
+import qrcode
 
 import pytest
 
@@ -67,8 +69,10 @@ def test_scan_qr_malicious(client, vt_malicious_response, monkeypatch):
     monkeypatch.setattr("requests.post", mock_post)
     monkeypatch.setattr("requests.get", mock_get)
 
-    # Upload a dummy PNG buffer
-    dummy_png = b"\x89PNG\r\n\x1a\n"
+    # Upload a valid QR image that decodes to a URL
+    buffer = io.BytesIO()
+    qrcode.make("https://bad.example").save(buffer, format="PNG")
+    dummy_png = buffer.getvalue()
     data = {"qr_image": (io.BytesIO(dummy_png), "test.png")}
     resp = client.post("/api/scan-qr", data=data, content_type="multipart/form-data")
 

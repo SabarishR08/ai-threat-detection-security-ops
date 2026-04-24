@@ -41,7 +41,7 @@ def fetch_urlhaus_phishing_urls(limit=10):
         print(f"    Error: {e}")
     return []
 
-def test_url_against_backend(url):
+def run_url_against_backend(url):
     """Test a single URL against /check-url endpoint."""
     try:
         payload = {"url": url}
@@ -118,7 +118,7 @@ def main():
     print("-" * 80)
     
     for i, url in enumerate(all_urls, 1):
-        result = test_url_against_backend(url)
+        result = run_url_against_backend(url)
         results.append(result)
         
         if result.get("success"):

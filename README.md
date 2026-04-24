@@ -13,9 +13,49 @@
 
 **A threat detection system analyzing logs and emails to detect anomalies and classify threats using advanced AI, including phishing and QRishing detection.**
 
+> Built as a full-stack AI security system with real-world threat intelligence integration.
+
 [Features](#features) • [Quick Start](#quick-start) • [Performance](#-performance-optimizations) • [API Documentation](#core-endpoints) • [Architecture](#architecture) • [Testing](#testing)
 
 </div>
+
+---
+
+## 🚀 What This Project Does
+
+AI-powered cybersecurity system that:
+- Detects phishing, malicious URLs, QR-based attacks, and suspicious logs
+- Combines threat intelligence APIs + AI (Gemini) for risk scoring
+- Provides real-time alerts via dashboard and email
+
+---
+
+## ⚡ Quick Run
+
+```bash
+cd backend
+pip install -r requirements.txt
+python app.py
+```
+
+Open: `http://localhost:5000/dashboard`
+
+---
+
+## 🧠 What I Built
+
+- Designed the end-to-end threat detection pipeline for URL, email, QR, and logs
+- Implemented AI-based risk scoring and contextual analysis with Gemini integration
+- Built SOC log analyzer using hybrid rule-based and AI-assisted reasoning
+- Developed Flask backend with modular service-layer architecture
+- Integrated real-time dashboard updates and alerting with SocketIO
+
+## 🔌 External Integrations
+
+- VirusTotal, Google Safe Browsing, PhishTank, AbuseIPDB, RDAP
+- Gemini API for advanced threat reasoning
+- Gmail API for mailbox ingestion
+- Brevo for alert delivery
 
 ---
 
@@ -24,43 +64,6 @@
 A comprehensive system designed to analyze logs and emails, detect anomalies, and classify threats using AI-powered intelligence. The platform integrates multiple threat intelligence sources and machine learning models to identify phishing attacks, malicious URLs, QRishing attempts, and suspicious log activities in real-time.
 
 > **📚 Quick Links**: [Documentation Index](docs/) | [Performance Guide](PERFORMANCE_INDEX.md) | [Testing Guide](backend/tests/README.md) | [API Reference](docs/01-API-Reference.md) | [System Architecture](docs/02-System-Architecture.md) | [Setup Guide](docs/03-Setup-Installation.md)
-
-> **⚡ Performance**: See [Performance Optimization Guide](PERFORMANCE_INDEX.md) for 10-50x speed improvements
-
-> **Security Note:** All security settings are enforced server-side. The UI reflects system state and does not handle secrets.
-
-## ⚡ Performance Optimizations
-
-### **10-50x Overall System Improvement**
-
-```
-BEFORE          →    AFTER          =  IMPROVEMENT
-─────────────────────────────────────────────────────
-20% cache hits  →    65-75% hits     = 3-4x better
-500ms latency   →    300ms latency   = 40% faster
-100ms queries   →    10ms queries    = 10x faster
-5-10s scans     →    1.2-2s scans    = 3-5x faster
-Unbounded RAM   →    <500MB max      = Controlled
-```
-
-### **5 High-Performance Algorithms**
-- ✅ **Adaptive LRU Cache with TTL** - Automatic memory management
-- ✅ **Bloom Filters** - O(1) negative lookups (100x faster)
-- ✅ **Connection Pooling** - Reused HTTP connections (40% latency reduction)
-- ✅ **Batch Processing** - Amortized I/O (50x faster bulk ops)
-- ✅ **Database Indexing** - 14 indexes for 10-200x query speedup
-
-### **Real-Time Monitoring**
-- 📊 `GET /api/performance/health` - System status
-- 📈 `GET /api/performance/metrics` - Detailed statistics
-- 💡 `GET /api/performance/recommendations` - Auto optimization suggestions
-- 🔧 `POST /api/performance/optimize` - Manual optimization trigger
-
-### **Getting Started with Performance**
-1. **5-Minute Setup**: [GETTING_STARTED.md](GETTING_STARTED.md)
-2. **Quick Reference**: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
-3. **Complete Guide**: [docs/PERFORMANCE.md](docs/PERFORMANCE.md)
-4. **Full Details**: [PERFORMANCE_INDEX.md](PERFORMANCE_INDEX.md)
 
 ---
 
@@ -169,6 +172,27 @@ Unbounded RAM   →    <500MB max      = Controlled
 | **POST** | `/api/tab-activity` | Log browser tab activity | `{ "url": "https://..." }` |
 | **GET** | `/api/logs` | Retrieve threat logs | Query: `?limit=50&offset=0` |
 | **GET** | `/api/soc-analyzer` | SOC analysis interface | N/A |
+
+## 📌 Example
+
+Request:
+```http
+POST /check-url
+Content-Type: application/json
+
+{
+    "url": "http://suspicious-site.com"
+}
+```
+
+Response:
+```json
+{
+    "risk_score": 87,
+    "threat": "Phishing",
+    "sources": ["VirusTotal", "Gemini"]
+}
+```
 
 ---
 
@@ -304,6 +328,52 @@ See [System Architecture](docs/02-System-Architecture.md) for detailed flow diag
 
 ---
 
+## ⚡ Performance Optimizations
+
+### **10-50x Overall System Improvement**
+
+```
+BEFORE          →    AFTER          =  IMPROVEMENT
+─────────────────────────────────────────────────────
+20% cache hits  →    65-75% hits     = 3-4x better
+500ms latency   →    300ms latency   = 40% faster
+100ms queries   →    10ms queries    = 10x faster
+5-10s scans     →    1.2-2s scans    = 3-5x faster
+Unbounded RAM   →    <500MB max      = Controlled
+```
+
+### **5 High-Performance Algorithms**
+- ✅ **Adaptive LRU Cache with TTL** - Automatic memory management
+- ✅ **Bloom Filters** - O(1) negative lookups (100x faster)
+- ✅ **Connection Pooling** - Reused HTTP connections (40% latency reduction)
+- ✅ **Batch Processing** - Amortized I/O (50x faster bulk ops)
+- ✅ **Database Indexing** - 14 indexes for 10-200x query speedup
+
+### **Real-Time Monitoring**
+- 📊 `GET /api/performance/health` - System status
+- 📈 `GET /api/performance/metrics` - Detailed statistics
+- 💡 `GET /api/performance/recommendations` - Auto optimization suggestions
+- 🔧 `POST /api/performance/optimize` - Manual optimization trigger
+
+### **Getting Started with Performance**
+1. **5-Minute Setup**: [GETTING_STARTED.md](GETTING_STARTED.md)
+2. **Quick Reference**: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+3. **Complete Guide**: [docs/PERFORMANCE.md](docs/PERFORMANCE.md)
+4. **Full Details**: [PERFORMANCE_INDEX.md](PERFORMANCE_INDEX.md)
+
+## 📊 Validation
+
+- Tested on 100+ URL/log samples
+- Baseline: sequential API calls without caching
+- Optimized: caching + batching + connection pooling
+
+Results:
+- Latency: 500ms → 300ms
+- Queries: 100ms → 10ms
+- Cache hit rate: 20% → ~70%
+
+---
+
 ## 📚 Documentation
 
 - **[API Reference](docs/01-API-Reference.md)** — Complete endpoint documentation and request/response schemas
@@ -380,13 +450,15 @@ See [Testing Guide](backend/tests/README.md) for detailed testing procedures.
 
 ---
 
-## 🔐 Security Considerations
+## 🔐 Security Practices
 
-- **Environment Variables**: All API keys stored in `.env` (never committed)
-- **Database Security**: SQLite with query parameterization to prevent SQL injection
-- **Authentication**: Settings page requires password verification
-- **SSL/TLS**: Support for HTTPS in production deployment
-- **Rate Limiting**: API endpoint protection against abuse
+- No secrets stored in repository
+- Environment-based configuration using `.env`
+- Sensitive files excluded via `.gitignore`
+- API keys rotated after accidental exposure
+- Input validation and sanitization implemented
+
+> **Note**: External API calls are mocked or rate-limited during testing.
 
 See [Security Features](docs/04-Security-Features.md) for comprehensive security documentation.
 

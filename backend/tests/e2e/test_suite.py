@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 import sys
 from pathlib import Path
 
-pytestmark = pytest.mark.xfail(reason="Legacy suite out of sync with current app", strict=False)
+pytestmark = pytest.mark.skip(reason="Legacy suite out of sync with current app")
 
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent / 'backend'))

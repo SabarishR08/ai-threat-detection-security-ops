@@ -1,12 +1,15 @@
 import os
 import io
 import json
+import pytest
 from app_init import create_app
 
 
 def load_test_image(name: str) -> bytes:
     base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     path = os.path.join(base, "dashboard", "static", "images", "tests", name)
+    if not os.path.exists(path):
+        pytest.skip(f"Test image not found: {path}")
     with open(path, "rb") as f:
         return f.read()
 
