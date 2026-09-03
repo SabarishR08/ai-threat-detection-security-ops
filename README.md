@@ -1,4 +1,76 @@
-# AI Threat Detection & Security Operations
+# Ai Threat Detection Security Ops
+
+![License](https://img.shields.io/badge/license-MIT-green) ![Language](https://img.shields.io/badge/language-Python-informational)
+
+
+## 📌 Overview
+
+A comprehensive AI-powered cybersecurity platform that analyzes logs, emails, URLs, and QR codes to detect anomalies and classify threats in real time. It integrates rule-based detection, advanced AI reasoning, and multiple threat intelligence sources to identify phishing, QRishing, malicious URLs, and suspicious system activities.
+
+## 🏗️ Architecture
+
+```text
+Browser / UI
+     │   HTTP
+     ▼
+Flask, WebSockets (Flask-SocketIO) app (handlers: admin, common, dashboard, email, monitoring, performance, qr, soc, threat_lookup)
+     │
+     ├──▶ Services — abuseipdb_service, advanced_reporting, alert_service, browser_extension, dashboard_enhancements, email_analyzer, …
+     ├──▶ Database — SQLite
+     └──▶ External services — VirusTotal, Google Safe Browsing, AbuseIPDB, Google Gemini, Google APIs · ML models — scikit-learn
+```
+
+## 🧰 Tech Stack
+
+- **Language:** Python
+- **Backend:** Flask, WebSockets (Flask-SocketIO)
+- **Database:** SQLite
+- **ML:** scikit-learn
+- **Integrations:** VirusTotal, Google Safe Browsing, AbuseIPDB, Google Gemini, Google APIs
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.10+
+
+### 1. Clone
+
+```bash
+git clone https://github.com/SabarishR08/ai-threat-detection-security-ops.git
+cd ai-threat-detection-security-ops
+```
+
+### 2. Install dependencies
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env   # then fill in values
+```
+
+Environment variables used: `VIRUSTOTAL_API_KEY`, `SAFE_BROWSING_API_KEY`, `PHISHTANK_API_KEY`, `ABUSEIPDB_API_KEY`, `GEMINI_API_KEY`, `BREVO_API_KEY`, `ALERT_EMAIL`, `SENDER_EMAIL`, `BREVO_SENDER`, `BREVO_RECEIVER`, `DEBUG`, `DATABASE_URL`, `FLASK_ENV`, `SECRET_KEY`, `LOG_DIR`.
+
+External services involved: VirusTotal, Google Safe Browsing, AbuseIPDB, Google Gemini, Google APIs.
+
+### 4. Run
+
+```bash
+python backend/app.py
+```
+
+```bash
+python backend/routes/dashboard.py
+```
+
+
+---
 
 <div align="center">
 
@@ -589,3 +661,9 @@ For questions, issues, or feature requests, please open an issue on GitHub.
 **[⬆ back to top](#ai-threat-detection--security-operations)**
 
 </div>
+
+---
+
+## 📄 License
+
+[MIT](LICENSE) — © 2026 Sabarish R.
